@@ -1,0 +1,18 @@
+# ignore the bin, lib, and share directories -- they are for the virtual environment
+bin/
+lib/
+share/
+
+# ignore other stuff for the virtual environment
+lib64
+pyvenv.cfg
+# symbolic link to ./bin/activate that I sometimes make
+activate
+
+# ignore some python stuff that I don't know what it is for
+pip-selfcheck.json
+__pycache__/
+
+# ignore the orig files created by vim
+*.orig
+
