@@ -23,7 +23,7 @@
 # date and time stuff
 from datetime import datetime, time
 # from pandas.tseries.frequencies import to_offset
-# from dateutil import parser as duparser
+# from dateutil import parser as duparsr
 
 # config file parser
 import configparser
@@ -107,7 +107,7 @@ if not cfgFile:
     quit()
 # if we get here, we have config data
 if args.verbose:
-    print('The config file(s) used are:')
+    print('The following config file(s) are used:')
     print(cfgFile)
     print('\nThe resulting configuration has these settings:')
     for section in config:
