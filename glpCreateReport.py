@@ -28,7 +28,7 @@
 #       path specified in the config file. If a file is specified by the
 #       -d/--dataFile command line option, then this file will be loaded and
 #       used.  If this file is not present, an error will result. If no file
-#       specified, thn all the data files (*.csv) will be loaded.
+#       specified, then all the data files (*.csv) will be loaded.
 #
 #   4)  Once one or more data files are loaded, the program will ensure that it
 #       has available to it (from step 2), the corresponding test definition. The
@@ -73,12 +73,11 @@ from PyPDF2 import PdfFileMerger, PdfFileReader
 # user libraries
 # Note: May need PYTHONPATH (set in ~/.profile?) to be set depending
 # on the location of the imported files
-# TimeStamped Indexed Data Class
-# from bpsTsIdxData import TsIdxData
-# list duplication helper functions
-# from bpsListDuplicates import listDuplicates
-# from bpsListDuplicates import listToListIntersection
 from bpsFile import listFiles
+
+# sepcialized libraties unlikely to be used elsewhere. These should
+# travle with this file.
+from Glp2TestDfn import Glp2TestDfn
 
 # **** argument parsing
 # define the arguments
@@ -153,6 +152,7 @@ print('**** Begin Processing ****')
 procStart = datetime.now()
 print('    Process start time: ' + procStart.strftime('%m/%d/%Y %H:%M:%S'))
 
+# **** Get config info from config file
 # bring in config data from config.ini by default or from file specified
 # with -c argument
 config = configparser.ConfigParser()
@@ -168,8 +168,8 @@ if args.verbose:
     print('The resulting configuration has these settings:')
     for section in config:
         print(section)
-        for key in config[section]:
-            print('  ', key, ':', config[section][key])
+        for option in config[section]:
+            print('  ', option, ':', config[section][option])
 # set the data paths to use internally
 if args.dirPrefix is not None:
     dataPath = join(args.dirPrefix, config['Paths']['common_dir'], config['Paths']['data_dir'])
@@ -182,23 +182,69 @@ if args.verbose:
     print('\nTest Data Path: ' + dataPath)
     print('Test Definition Path: ' + testDfnPath)
 
+# **** Figure out what test definition file to use, and load it (or them!!)
 # Get a list of test definition files in the test definition path
-testDfns = listFiles(testDfnPath)
+testDfnNames = listFiles(testDfnPath)
+testDfns = [] # definition holding spot
 
 if args.verbose:
     print('\nTest Definitions found:')
-    print(testDfns)
+    print(testDfnNames)
 
 # If a test definition file was specified, see if it was found. If not, error out.
-if args.testDfnFile != '' and args.testDfnFile is not None and not args.testDfnFile in testDfns:
+# If no test definition file was specified, load them all, and look for the correct id later
+if args.testDfnFile != '' and args.testDfnFile is not None and not args.testDfnFile in testDfnNames:
+    # Test dfn file specified, but not found. Print message and leave.
     print('\nERROR: The test definition file \'' + args.testDfnFile + '\' was specified, \
 but was not found. Exiting.')
     quit()
-elif args.testDfnFile != '' and args.testDfnFile is not None and args.testDfnFile in testDfns:
+elif args.testDfnFile != '' and args.testDfnFile is not None and args.testDfnFile in testDfnNames:
+    # Test dfn file specified, and found. Print message and load into a 1 element list
     print('\nSepecified test definition file \'' + args.testDfnFile + '\' was found and is being used.')
+    try:
+        testDfns.append(Glp2TestDfn(args.testDfnFile, join(testDfnPath, args.testDfnFile),
+                                    args.testDfnEncoding))
+    except UnicodeError as  ue:
+        print('Unicode Error: Unable to load test definition file: ' + args.testDfnFile +
+            '. Check encoding. It should be: ' + args.testDfnEncoding + '. ')
+        print(ue)
+        quit()
 elif args.testDfnFile == '' or args.testDfnFile is None:
+    # Test dfn file not specified. Load all the definitions.
     print('\nThere was no test definition file specified.  The test definition id in the \
 data will be used to try and determne the correct test definition file to use.')
+    for dfnName in testDfnNames:
+        try:
+            testDfns.append(Glp2TestDfn(dfnName, join(testDfnPath, dfnName), args.testDfnEncoding))
+        except UnicodeError as  ue:
+            print('Unicode Error: Unable to load test definition file: ' + dfnName +
+            '. Check encoding. It should be: ' + args.testDfnEncoding + '. ')
+            print(ue)
+
+# **** Load test data.
+# If a data file was specified, load it, or error out if not possible.
+# If no data file was specified, load all of them so they can all be processed.
+
+
+# **** read the csv file into a data frame.  The first row is treated as the header
+try:
+    # Use string as the data type for all columns to prevent automatic
+    # datatype detection. 
+    df_source = pd.read_csv(args.inputFileName, sep=args.sourceDelimiter,
+                        delim_whitespace=False, encoding=args.sourceEncoding,
+                        header=None, dtype = str, skipinitialspace=True)
+                        # mangle_dupe_cols=False)
+    df_source = df_source.rename(columns=df_source.iloc[0], copy=False).iloc[1:].reset_index(drop=True)
+    # NOTE: At this point the source may have duplicate columns. This may be okay
+    # or it may be problematic, depending on the -t, -a, or -n option. Deal with
+    # duplicates below when we check the option.
+    
+except ValueError as ve:
+    print('ERROR opening source file: "' + args.inputFileName + '". Check file \
+name, file presence, and permissions. Unexpected encoding can also cause this \
+error.')
+    print(ve)
+    quit()
 
 # get end  processing time
 procEnd = datetime.now()
