@@ -81,6 +81,7 @@ from bpsFile import listFiles
 # sepcialized libraties unlikely to be used elsewhere. These should
 # travle with this file.
 from Glp2TestDfn import Glp2TestDfn
+from Glp2TestData import Glp2TestData
 
 # **** argument parsing
 # define the arguments
@@ -249,9 +250,8 @@ elif args.dataFile != '' and args.dataFile is not None and args.dataFile in test
         with open(join(testDataPath, args.dataFile), mode='r', encoding=args.dataFileEncoding) as dataCsvFile:
             testData = tuple(csv.reader(dataCsvFile, delimiter = ';'))
             testDataHeaders=testData[0]
-            print(testDataHeaders)
-            for row in testData:
-                print(row)
+            testData = Glp2TestData(testData[1:], testDataHeaders)
+            print(testData)
 
     except UnicodeDecodeError as ude:
         print('Unicode Error: Unable to load test data file: ' + args.dataFile +
