@@ -59,6 +59,9 @@ import configparser
 # arg parser
 import argparse
 
+# csv file stuff
+import csv
+
 # numerical manipulation libraries
 import numpy as np
 import pandas as pd
@@ -133,10 +136,11 @@ args = parser.parse_args()
 # args.dataFile         string   Input file name. Optional. Data directory in
 #                                config file will be searched if a file is not
 #                                specified.
+# args.dataFileEncoding string   Optional. Default is UTF-16
 # args.dirPrefix        string   Optional. Prepended to directory path specified
 #                                in config file.
 # args.configFile       string   Optional. Default 'config.ini'
-# args.configEncoding   string   Optional, Default 'UTF-8'
+# args.configEncoding   string   Optional. Default 'UTF-8'
 # args.testDfnFile      string   Optional. Test Definition File. If a file is
 #                                not specified, all *.TPR files int the path
 #                                specified in the config file will be considered.
@@ -172,14 +176,14 @@ if args.verbose:
             print('  ', option, ':', config[section][option])
 # set the data paths to use internally
 if args.dirPrefix is not None:
-    dataPath = join(args.dirPrefix, config['Paths']['common_dir'], config['Paths']['data_dir'])
+    testDataPath = join(args.dirPrefix, config['Paths']['common_dir'], config['Paths']['data_dir'])
     testDfnPath = join(args.dirPrefix, config['Paths']['common_dir'], config['Paths']['test_dfn_dir'])
 else:
-    dataPath = join(config['Paths']['common_dir'], config['Paths']['data_dir'])
+    testDataPath = join(config['Paths']['common_dir'], config['Paths']['data_dir'])
     testDfnPath = join(config['Paths']['common_dir'], config['Paths']['test_dfn_dir'])
 
 if args.verbose:
-    print('\nTest Data Path: ' + dataPath)
+    print('\nTest Data Path: ' + testDataPath)
     print('Test Definition Path: ' + testDfnPath)
 
 # **** Figure out what test definition file to use, and load it (or them!!)
@@ -206,7 +210,7 @@ elif args.testDfnFile != '' and args.testDfnFile is not None and args.testDfnFil
                                     args.testDfnEncoding))
     except UnicodeError as  ue:
         print('Unicode Error: Unable to load test definition file: ' + args.testDfnFile +
-            '. Check encoding. It should be: ' + args.testDfnEncoding + '. ')
+            '. Check encoding. ' + args.testDfnEncoding + ' was expected.')
         print(ue)
         quit()
 elif args.testDfnFile == '' or args.testDfnFile is None:
@@ -218,33 +222,55 @@ data will be used to try and determne the correct test definition file to use.')
             testDfns.append(Glp2TestDfn(dfnName, join(testDfnPath, dfnName), args.testDfnEncoding))
         except UnicodeError as  ue:
             print('Unicode Error: Unable to load test definition file: ' + dfnName +
-            '. Check encoding. It should be: ' + args.testDfnEncoding + '. ')
+            '. Check encoding. ' + args.testDfnEncoding + ' was expected.')
             print(ue)
 
-# **** Load test data.
-# If a data file was specified, load it, or error out if not possible.
-# If no data file was specified, load all of them so they can all be processed.
+# **** Figure out what test data file to use, and load it (or them!!)
+# Get a list of test data files in the data path
+testDataNames = listFiles(testDataPath)
+testDatas = [] # data holding spot
 
+if args.verbose:
+    print('\nTest data files found:')
+    print(testDataNames)
 
-# **** read the csv file into a data frame.  The first row is treated as the header
-try:
-    # Use string as the data type for all columns to prevent automatic
-    # datatype detection. 
-    df_source = pd.read_csv(args.inputFileName, sep=args.sourceDelimiter,
-                        delim_whitespace=False, encoding=args.sourceEncoding,
-                        header=None, dtype = str, skipinitialspace=True)
-                        # mangle_dupe_cols=False)
-    df_source = df_source.rename(columns=df_source.iloc[0], copy=False).iloc[1:].reset_index(drop=True)
-    # NOTE: At this point the source may have duplicate columns. This may be okay
-    # or it may be problematic, depending on the -t, -a, or -n option. Deal with
-    # duplicates below when we check the option.
-    
-except ValueError as ve:
-    print('ERROR opening source file: "' + args.inputFileName + '". Check file \
-name, file presence, and permissions. Unexpected encoding can also cause this \
-error.')
-    print(ve)
+# If a test data file was specified, see if it was found. If not, error out.
+# If no test data file was specified, load them all, so they can all be processed.
+if args.dataFile != '' and args.dataFile is not None and not args.dataFile in testDataNames:
+    # Test data file specified, but not found. Print message and leave.
+    print('\nERROR: The test data file \'' + args.dataFile + '\' was specified, \
+but was not found. Exiting.')
     quit()
+elif args.dataFile != '' and args.dataFile is not None and args.dataFile in testDataNames:
+    # Test data file specified, and found. Print message and load into a 1 element list
+    print('\nSepecified test data file \'' + args.dataFile + '\' was found and is being used.')
+    # **** read the csv file into a data frame.  The first row is treated as the header
+    try:
+        with open(join(testDataPath, args.dataFile), mode='r', encoding=args.dataFileEncoding) as dataCsvFile:
+            testData = tuple(csv.reader(dataCsvFile, delimiter = ';'))
+            testDataHeaders=testData[0]
+            print(testDataHeaders)
+            for row in testData:
+                print(row)
+
+    except UnicodeDecodeError as ude:
+        print('Unicode Error: Unable to load test data file: ' + args.dataFile +
+            '. Check encoding. ' + args.dataFileEncoding + ' was expected.')
+        print(ude)
+        quit()
+    except LookupError as lue:
+        print('Unknown encoding specified. Most common are \'UTF-16\' or \'UTF-8\'')
+        print(lue)
+        quit()
+
+elif args.dataFile == '' or args.dataFile is None:
+    # Test data file not specified. Load all those found.
+    print('\nThere was no test data file specified.  All data files found will be processed.')
+    for dataName in testDataNames:
+        # TODO: Read CSV File, and get it into an object.
+        pass
+
+
 
 # get end  processing time
 procEnd = datetime.now()
