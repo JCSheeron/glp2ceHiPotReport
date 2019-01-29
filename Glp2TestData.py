@@ -4,35 +4,41 @@
 # Glp2TestData.py
 #
 # imports
-#
+from Glp2TestDataStep import Glp2TestDataStep
 
 class Glp2TestData(object):
-    def __init__(self, data=None, header=None, nameIdx=25, guidIdx=49,
-                timestampIdx=30, deviceNumberIdx=31, graphDataIdx=76):
-        if data is None: # no data provided
-            # no data specified. Create an empty object. Use the header data if specified.
-            ClearData(header=header)
-        else: # data provided
-            # make sure the data is convertable to a tuple. If not create
-            # an empty object
+    def __init__(self, data=None, header=None, nameIdx=25, testGuid=0,
+                 testProgramGuidIdx=49, deviceNumberIdx=31):
+        # The data expected is a tuple, list, or something convertable to a
+        # tuple that has an entire row of data from a test data file.  The
+        # indexes are the normal column counts, starting at zero.
+        if data is not None: # data provided
+            # make sure the data is convertable to a tuple. If not, report an 
+            # error -- a tuple is immutable, so an empty one isn't very useful.
             try:
                 self._rawData=tuple(data)
-                self._len = len(self._rawData)
                 # if we get here, we should have a tuple with something in it
                 # Assume it is a multi element tuple, with each element containing 
-                # a row.
-                # get the number of rows. This will inclued the first, presumably header row
-                # self._rows = len(self._rawData)
-                # get the header row as long as there is at least 1 row
-                # if self._rows >= 1:
-                #     self._dataHeader = self._da
-                # get the header values
+                # details of a test step.
+
             except ValueError as ve:
                 print('Value Error: data parameter must be a tuple or something \
 convertalbe to a tuple. This generally means it must be something iteratable. \
-Creating empty object.')
+No Data Captured.')
                 print(ve)
-                ClearData()
+                self._rawData = None
+                self._steps = None
+                quit()
+
+            # Set up test step objects to contain the step details.
+            # NOTE: Assume the first row of the raw data is the header
+            if len(self._rawData) > 0:
+                # If there is someting in the data ...
+                # Assume it is an list of step details (list of lists)
+            steps=[]
+            for idx, row in enumerate(self._rawData):
+                if len(row) >= 1: # skip blank rows
+                    steps.append(Glp2TestDataStep(row, self._rawData[0]))
 
         self._nameIdx = nameIdx
         self._guidIdx = guidIdx
@@ -62,8 +68,8 @@ iteratable. Setting the header to None.')
         for idx, heading in enumerate(self._dataHeader):
             outputMsg+= '  {:2}: {}\n'.format(idx, heading)
         outputMsg+= '{:16} \n'.format('Test Data: ')
-#        for idx, heading in enumerate(self._dataHeader):
-#            outputMsg+= '  {:4}-{:<4}: {}\n'.format(idx, heading, self._rawData[idx])
+        for row in self._rawData:
+            outputMsg+= '  {}\n'.format(row)
 
         return(outputMsg)
 

@@ -248,31 +248,35 @@ elif args.dataFile != '' and args.dataFile is not None and args.dataFile in test
     # **** read the csv file into a data frame.  The first row is treated as the header
     try:
         with open(join(testDataPath, args.dataFile), mode='r', encoding=args.dataFileEncoding) as dataCsvFile:
-            testDataSet = tuple(csv.reader(dataCsvFile, delimiter = ';'))
-            # testDataSet may be one or more sets of test data (multiple tests saved in one file)
+            fileDataSet = tuple(csv.reader(dataCsvFile, delimiter = ';'))
+            # fileDataSet may be one or more sets of test data (multiple tests saved in one file)
             # each test may be (usually is) more than one step
             testIds=set()   # holding spot for set of unique ids
-            tests=[]        # holding spot for a list of test objects
-            testObjs=[]
-            # make a list of tests, but use seperate each test by Test GUID
+            test=[]         # holding spot for the rows corresponding to one test id
+            tests=[]        # holding spot for test data objects created from the file data set.
+            # make a list of tests, but seperate each test by Test GUID
             # Get a list of unique test ids
-            for row in testDataSet[1:]: # exclude the header (1st row)
+            for row in fileDataSet[1:]: # exclude the header (1st row)
                 if len(row) >= 1: # exclude blank rows
                     testIds.add(row[0])
             # make a filter function
             def idMatch(id, x):
-                return x[0]==id
-            # make a list for each unique id
+                return x==id
+            # Get the rows from the file data set that match a unique test id.
+            # Have one list of rows for each unique id.
             for id in testIds:
-                # make a new list based on the filter
-                tests.append(filter(lambda x: idMatch(id, x), testDataSet))
-            # now make a test object for each filter result
+                test.clear()
+                for row in fileDataSet[1:]:
+                    # make a new list based on the filter
+                    if len(row) >= 1 and id == row[0]:
+                        test.append(row)
+                # at this point, all the rows for a given test id should be in test[]
+                # create a test object from it
+                tests.append(Glp2TestData(test, fileDataSet[0]))
+
             for test in tests:
-                testObjs.append(Glp2TestData(test, testDataSet[0]))
-
-            for test in testObjs:
                 print(test)
-
+#
     except UnicodeDecodeError as ude:
         print('Unicode Error: Unable to load test data file: ' + args.dataFile +
             '. Check encoding. ' + args.dataFileEncoding + ' was expected.')
