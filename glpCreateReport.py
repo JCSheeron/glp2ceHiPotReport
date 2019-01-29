@@ -248,20 +248,40 @@ elif args.dataFile != '' and args.dataFile is not None and args.dataFile in test
     # **** read the csv file into a data frame.  The first row is treated as the header
     try:
         with open(join(testDataPath, args.dataFile), mode='r', encoding=args.dataFileEncoding) as dataCsvFile:
-            testData = tuple(csv.reader(dataCsvFile, delimiter = ';'))
-            testDataHeaders=testData[0]
-            testData = Glp2TestData(testData[1:], testDataHeaders)
-            print(testData)
+            testDataSet = tuple(csv.reader(dataCsvFile, delimiter = ';'))
+            # testDataSet may be one or more sets of test data (multiple tests saved in one file)
+            # each test may be (usually is) more than one step
+            testIds=set()   # holding spot for set of unique ids
+            tests=[]        # holding spot for a list of test objects
+            testObjs=[]
+            # make a list of tests, but use seperate each test by Test GUID
+            # Get a list of unique test ids
+            for row in testDataSet[1:]: # exclude the header (1st row)
+                if len(row) >= 1: # exclude blank rows
+                    testIds.add(row[0])
+            # make a filter function
+            def idMatch(id, x):
+                return x[0]==id
+            # make a list for each unique id
+            for id in testIds:
+                # make a new list based on the filter
+                tests.append(filter(lambda x: idMatch(id, x), testDataSet))
+            # now make a test object for each filter result
+            for test in tests:
+                testObjs.append(Glp2TestData(test, testDataSet[0]))
+
+            for test in testObjs:
+                print(test)
 
     except UnicodeDecodeError as ude:
         print('Unicode Error: Unable to load test data file: ' + args.dataFile +
             '. Check encoding. ' + args.dataFileEncoding + ' was expected.')
         print(ude)
         quit()
-    except LookupError as lue:
-        print('Unknown encoding specified. Most common are \'UTF-16\' or \'UTF-8\'')
-        print(lue)
-        quit()
+#    except LookupError as lue:
+#        print('Unknown encoding specified. Most common are \'UTF-16\' or \'UTF-8\'')
+#        print(lue)
+#        quit()
 
 elif args.dataFile == '' or args.dataFile is None:
     # Test data file not specified. Load all those found.

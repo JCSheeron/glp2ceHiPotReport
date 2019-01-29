@@ -7,21 +7,17 @@
 #
 
 class Glp2TestData(object):
-    def __init__(self, data=None, header=None):
+    def __init__(self, data=None, header=None, nameIdx=25, guidIdx=49,
+                timestampIdx=30, deviceNumberIdx=31, graphDataIdx=76):
         if data is None: # no data provided
             # no data specified. Create an empty object. Use the header data if specified.
-            ClearData(header=None)
+            ClearData(header=header)
         else: # data provided
             # make sure the data is convertable to a tuple. If not create
             # an empty object
-            self._testDfnName = 'Peter'
-            self._testDfnId = '666.6'
-            self._testTimestamp = '12/15/2019'
-            self._deviceNumber = '123456789'
-            self._rawData = None
-            self._graphData = None
             try:
                 self._rawData=tuple(data)
+                self._len = len(self._rawData)
                 # if we get here, we should have a tuple with something in it
                 # Assume it is a multi element tuple, with each element containing 
                 # a row.
@@ -38,6 +34,12 @@ Creating empty object.')
                 print(ve)
                 ClearData()
 
+        self._nameIdx = nameIdx
+        self._guidIdx = guidIdx
+        self._timestampIdx = timestampIdx
+        self._deviceNumberIdx = deviceNumberIdx
+        self._graphDataIdx = graphDataIdx
+
         if header is None: # no header specified
             self._dataHeader = None
         else: # header specified
@@ -52,28 +54,23 @@ iteratable. Setting the header to None.')
                 self._dataHeader = None
 
     def __repr__(self):
-        outputMsg=  '{:16} {}\n'.format('Test Dfn Name: ', self._testDfnName)
-        outputMsg+= '{:16} {}\n'.format('Test Dfn Id: ', self._testDfnId)
-        outputMsg+= '{:16} {}\n'.format('Test Timestamp: ', self._testTimestamp)
-        outputMsg+= '{:16} {}\n'.format('Device Number: ', self._deviceNumber)
+        outputMsg=  '{:16} {}\n'.format('Test Dfn Name: ', self.testDfnName)
+        outputMsg+= '{:16} {}\n'.format('Test Dfn Id: ', self.testDfnId)
+        outputMsg+= '{:16} {}\n'.format('Test Timestamp: ', self.testTimestamp)
+        outputMsg+= '{:16} {}\n'.format('Device Number: ', self.deviceNumber)
         outputMsg+= '{:16} \n'.format('Data Header: ')
         for idx, heading in enumerate(self._dataHeader):
             outputMsg+= '  {:2}: {}\n'.format(idx, heading)
         outputMsg+= '{:16} \n'.format('Test Data: ')
-        outputMsg+= '{:16} \n'.format('Test Data: ')
-        for rowNum, rowData in enumerate(self._rawData):
-            for col, value in enumerate(rowData):
-                outputMsg+= '  {:4}-{:<4} ({:27}): {}\n'.format(rowNum, col, self._dataHeader[col], value)
+#        for idx, heading in enumerate(self._dataHeader):
+#            outputMsg+= '  {:4}-{:<4}: {}\n'.format(idx, heading, self._rawData[idx])
 
         return(outputMsg)
 
-    def ClearData(self, header):
-        self._testDfnName = ''
-        self._testDfnId = ''
-        self._testTimestamp = None
-        self._deviceNumber = ''
+    def ClearData(self, header=None):
         self._rawData = None
-        self._graphData = None
+        self._len = 0
+
         if header is None: # no header specified
             self._dataHeader = None
         else: # header specified
@@ -87,36 +84,56 @@ a tuple, and cannot be converted to a tuple. This generally means it must be som
                 self._dataHeader = None
 
     # properties
-    # TODO: Derive the property value from the data, and get rid of the member variables
     @property
     def testDfnName(self):
-        return self._testDfnName
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._nameIdx + 1 <= self._len:
+            return self._rawData[self._nameIdx]
+        else:
+            return None
 
     @property
     def testDfnId(self):
-        return self._testDfnId
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._guidIdx + 1 <= self._len:
+            return self._rawData[self._guidIdx]
+        else:
+            return None
 
     @property
     def testTimestamp(self):
-        return self._testTimestamp
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._timestampIdx + 1 <= self._len:
+            return self._rawData[self._timestampIdx]
+        else:
+            return None
 
     @property
     def deviceNumber(self):
-        return self._deviceNumber
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._deviceNumberIdx + 1 <= self._len:
+            return self._rawData[self._deviceNumberIdx]
+        else:
+            return None
 
     @property
     def rows(self):
-        return len(self._rawData)
+        return self._len
 
     @property
     def header(self):
         return (self._dataHeader)
+
     @property
     def data(self):
         return self._rawData
 
     @property
     def graphData(self):
-        return self._graphData
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._graphDataIdx + 1 <= self._len:
+            return self._rawData[self._graphDataIdx]
+        else:
+            return None
 
 
