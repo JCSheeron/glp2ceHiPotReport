@@ -256,27 +256,26 @@ elif args.dataFile != '' and args.dataFile is not None and args.dataFile in test
             tests=[]        # holding spot for test data objects created from the file data set.
             # make a list of tests, but seperate each test by Test GUID
             # Get a list of unique test ids
+            # TODO: replace index values, (e.g. 0 in row[0]) with index values originating from config file
             for row in fileDataSet[1:]: # exclude the header (1st row)
                 if len(row) >= 1: # exclude blank rows
                     testIds.add(row[0])
-            # make a filter function
-            def idMatch(id, x):
-                return x==id
             # Get the rows from the file data set that match a unique test id.
             # Have one list of rows for each unique id.
             for id in testIds:
                 test.clear()
                 for row in fileDataSet[1:]:
-                    # make a new list based on the filter
+                    # make a new list based on the filter.
+                    # Skip blank rows
                     if len(row) >= 1 and id == row[0]:
                         test.append(row)
                 # at this point, all the rows for a given test id should be in test[]
                 # create a test object from it
                 tests.append(Glp2TestData(test, fileDataSet[0]))
 
-            for test in tests:
-                print(test)
-#
+            for t in tests:
+                print(t)
+
     except UnicodeDecodeError as ude:
         print('Unicode Error: Unable to load test data file: ' + args.dataFile +
             '. Check encoding. ' + args.dataFileEncoding + ' was expected.')
