@@ -35,9 +35,9 @@
 from Glp2TestDataStep import Glp2TestDataStep
 
 class Glp2TestData(object):
-    def __init__(self, data=None, header=None, testGuidIdx=0, testProgramNameIdx=25,
-                 testProgramGuidIdx=49, deviceNumberIdx=31, testStepGuidIdx=1,
-                 stepNumberIdx=2, timestampIdx=30, graphDataIdx=76):
+    def __init__(self, fileName=None, data=None, header=None, testGuidIdx=0,
+                 testProgramNameIdx=25, testProgramGuidIdx=49, deviceNumberIdx=31,
+                 testStepGuidIdx=1, stepNumberIdx=2, timestampIdx=30, graphDataIdx=76):
         # The data expected is a tuple, list, or something convertable to a
         # tuple that has an entire row of data from a test data file.  The
         # indexes are the normal column counts, starting at zero.
@@ -48,7 +48,10 @@ class Glp2TestData(object):
         #   timestampIdx
         #   deviceNumberIdx (used by both Glp2TestData and Glp2TestDataStep)
         #   graphDataIdx
-        #
+
+        # Capture the file name
+        self._fileName = str(fileName)
+
         # Set the header. Do this first so it is available to make
         # steps later.
         if header is None: # no header specified
@@ -109,10 +112,11 @@ No Data Captured.')
         self._deviceNumberIdx = deviceNumberIdx
 
     def __repr__(self):
-        outputMsg=  '{:16} {}\n'.format('Test Id: ', self.testGuid)
-        outputMsg=  '{:16} {}\n'.format('Test Dfn (Program) Name: ', self.testProgramName)
-        outputMsg+= '{:16} {}\n'.format('Test Dfn (Program) Id: ', self.testProgramGuid)
-        outputMsg+= '{:16} {}\n'.format('Device Number: ', self.deviceNumber)
+        outputMsg=  '{:26} {}\n'.format('File Name: ', self.fileName)
+        outputMsg+= '{:26} {}\n'.format('Test Id: ', self.testGuid)
+        outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) Name: ', self.testProgramName)
+        outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) GUID: ', self.testProgramGuid)
+        outputMsg+= '{:26} {}\n'.format('Device Number: ', self.deviceNumber)
 #        # header
 #        outputMsg+= '\n{:16} \n'.format('Data Header: ')
 #        if self._dataHeader is not None:
@@ -143,6 +147,10 @@ No Data Captured.')
         return(outputMsg)
 
     # properties
+
+    @property
+    def fileName(self):
+        return self._fileName
 
     @property
     def testGuid(self, step=1):

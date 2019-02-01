@@ -82,6 +82,7 @@ from bpsFile import listFiles
 # travle with this file.
 from Glp2TestDfn import Glp2TestDfn
 from Glp2TestData import Glp2TestData
+from Glp2Functions import MakeTestList
 
 # **** argument parsing
 # define the arguments
@@ -218,21 +219,22 @@ elif args.testDfnFile == '' or args.testDfnFile is None:
     # Test dfn file not specified. Load all the definitions.
     print('\nThere was no test definition file specified.  The test definition id in the \
 data will be used to try and determne the correct test definition file to use.')
+    # For each definition file name, create and append a Glp2TestDen object.
+    # Exclude files starting with '.', or files that don't end with '*.tpr' (case insensitive)
+    # The no starting dot filters out hidden or locked files, and the .tpr
+    # requirement at the end means that only *.tpr files are considered.
     for dfnName in testDfnNames:
-        try:
-            testDfns.append(Glp2TestDfn(dfnName, join(testDfnPath, dfnName), args.testDfnEncoding))
-        except UnicodeError as  ue:
-            print('Unicode Error: Unable to load test definition file: ' + dfnName +
-            '. Check encoding. ' + args.testDfnEncoding + ' was expected.')
-            print(ue)
-    for dfn in testDfns:
-        print(dfn.name)
-        print(dfn.id)
-        print(dfn)
+        if not dfnName.startswith('.') and dfnName.lower().endswith('.tpr'):
+            try:
+                testDfns.append(Glp2TestDfn(dfnName, join(testDfnPath, dfnName), args.testDfnEncoding))
+            except UnicodeError as  ue:
+                print('Unicode Error: Unable to load test definition file: ' + dfnName +
+                '. Check encoding. ' + args.testDfnEncoding + ' was expected.')
+                print(ue)
+
 # **** Figure out what test data file to use, and load it (or them!!)
 # Get a list of test data files in the data path
 testDataNames = listFiles(testDataPath)
-testDatas = [] # data holding spot
 
 if args.verbose:
     print('\nTest data files found:')
@@ -251,56 +253,61 @@ elif args.dataFile != '' and args.dataFile is not None and args.dataFile in test
     # **** read the csv file into a data frame.  The first row is treated as the header
     try:
         with open(join(testDataPath, args.dataFile), mode='r', encoding=args.dataFileEncoding) as dataCsvFile:
-            fileDataSet = tuple(csv.reader(dataCsvFile, delimiter = ';'))
-            # fileDataSet may be one or more sets of test data (multiple tests saved in one file)
-            # each test may be (usually is) more than one step
-            testIds=set()   # holding spot for set of unique ids
-            test=[]         # holding spot for the rows corresponding to one test id
-            tests=[]        # holding spot for test data objects created from the file data set.
-            # make a list of tests, but seperate each test by Test GUID
-            # Get a list of unique test ids
-            # TODO: replace index values, (e.g. 0 in row[0]) with index values originating from config file
-            for row in fileDataSet[1:]: # exclude the header (1st row)
-                if len(row) >= 1: # exclude blank rows
-                    testIds.add(row[0])
-            # Get the rows from the file data set that match a unique test id.
-            # Have one list of rows for each unique id.
-            for id in testIds:
-                test.clear()
-                for row in fileDataSet[1:]:
-                    # make a new list based on the filter.
-                    # Skip blank rows
-                    if len(row) >= 1 and id == row[0]:
-                        test.append(row)
-                # at this point, all the rows for a given test id should be in test[]
-                # create a test object from it
-                tests.append(Glp2TestData(test, fileDataSet[0]))
-
-            # for t in tests:
-            if tests is not None:
-                print(tests[0])
+            tests = MakeTestList(args.dataFile, csv.reader(dataCsvFile, delimiter = ';'))
 
     except UnicodeDecodeError as ude:
         print('Unicode Error: Unable to load test data file: ' + args.dataFile +
             '. Check encoding. ' + args.dataFileEncoding + ' was expected.')
         print(ude)
         quit()
-#    except LookupError as lue:
-#        print('Unknown encoding specified. Most common are \'UTF-16\' or \'UTF-8\'')
-#        print(lue)
-#        quit()
 
 elif args.dataFile == '' or args.dataFile is None:
     # Test data file not specified. Load all those found.
+    tests = []
     print('\nThere was no test data file specified.  All data files found will be processed.')
-    for dataName in testDataNames:
-        # TODO: Read CSV File, and get it into an object.
-        pass
+    for fileName in testDataNames:
+        # For each data file name, make a list of Glp2TestData objects
+        # Exclude files starting with '.', or files that don't end with '*.csv'
+        # The no starting dot filters out hidden or locked files, and the .csv
+        # requirement at the end means that only *.csv files are considered.
+        if not fileName.startswith('.') and fileName.lower().endswith('.csv'):
+           # file should be considered test data
+            try:
+                with open(join(testDataPath, fileName), mode='r', encoding=args.dataFileEncoding) as dataCsvFile:
+                    fileTestList = MakeTestList(fileName, csv.reader(dataCsvFile, delimiter = ';'))
+
+            except UnicodeDecodeError as ude:
+                print('Unicode Error: Unable to load test data file: ' + args.dataFile +
+                    '. Check encoding. ' + args.dataFileEncoding + ' was expected.')
+                print(ude)
+                quit()
+            # If we get here, we have a partial list of test objects from the file
+            # processed.  Use tests[] to accumulate all of them from all files.
+            tests.extend(fileTestList) # list.append appends an object, list.extend appends elements.
+
+# If we get here, tests[] contains all the test data from one or more test data (*.csv) files.
+# Convert it to a tuple to prevent bugs from changing it.
+#
+# TODO: At this point we have the test defintions loaded and the test data loaded.  Use
+# the relational guids to relate the two, and create a meaningful, well formatted output.
+#
+# TODO: Parse & Process the graph data
+#
+# TODO: Create a graph (MatPlotLib)
+#
+# TODO: Create a PDF with the text and graph output
+
+tests = tuple(tests)
+print('Number of tests loaded: ' + str(len(tests)))
+for test in tests:
+    #print(test.fileName + ' : ' + test.testProgramName + ' : ' + test.testGuid)
+    print(test)
 
 
 
-# get end  processing time
+# get end processing time
 procEnd = datetime.now()
 print('\n**** End Processing ****')
 print('    Process end time: ' + procEnd.strftime('%m/%d/%Y %H:%M:%S'))
 print('    Duration: ' + str(procEnd - procStart) + '\n')
+

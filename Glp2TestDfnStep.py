@@ -5,121 +5,47 @@
 # Glp2TestDfn.py
 #
 #
-# TODO: Get values and definitions for step method, and mode
+# TODO: Get values and definitions for step method, and mode. Probably use
+# a dictionary or some sort of enumeration to give values meaningful names.
+#
 # imports
+import Glp2Constants as constants
 #
 class Glp2TestDfnStep(object):
-    def __init__(self, stepNum=None, stepGuid=None, stepMethod=None,
-                 stepMode=None, stepDescription=None, currentRange=None,
-                 currentLimit=None, testTime=None, rampTime=None, delayTime=None,
-                 testVoltage=None ):
+    def __init__(self, stepNum, data=None):
+        
+        # step number must be an integer, or something convertable to an integer
         try:
             self._stepNum = int(stepNum)
         except ValueError as ve:
-            print('Error: When creating a test definition step, the test number \
-must be an integer, or something convertable to an integer. Step number not set.')
             self._stepNum = None
+            print('Error: When createing a test definition step, the step number \
+must be an integer, or something convertable to an integer. Step number not set.')
             print(ve)
 
-        try:
-            self._stepGuid = str(stepGuid)
-        except ValueError as ve:
-            print('Error: When creating a test definition step, the step GUID \
-must be a string, or something convertable to a string. Step GUID not set.')
-            self._stepGuid = None
-            print(ve)
-
-        try:
-            self._stepMethod = int(stepMethod)
-        except ValueError as ve:
-            print('Error: When creating a test definition step, the step method \
-must be an integer, or something convertable to an integer. Step method not set.')
-            self._Method = None
-            print(ve)
-
-        try:
-            self._stepMode = int(stepMode)
-        except ValueError as ve:
-            print('Error: When creating a test definition step, the step mode \
-must be an integer, or something convertable to an integer. Step mode not set.')
-            self._stepMode = None
-            print(ve)
-
-        try:
-            self._stepDescription = str(stepDescription)
-        except ValueError as ve:
-            print('Error: When creating a test definition step, the step description \
-must be a string, or something convertable to a string. Step description not set.')
-            self._stepDescription = None
-            print(ve)
-
-        try:
-            self._currentRange = str(currentRange)
-            # TODO: derive and store current units from the given limit (mA, uA, etc)
-        except ValueError as ve:
-            print('Error: When creating a test definition step, the current range \
-must be a string, or something convertable to a string. Current range not set.')
-            self._currentRange = None
-            print(ve)
-
-        try:
-            self._currentLimit = float(currentLimit)
-        except ValueError as ve:
-            print('Error: When creating a test definition step, the current limit\
-must be a floating point value or something convertable to a floating point value. \
-Current limit not set.')
-            self._currentLimit= None
-            print(ve)
-
-        try:
-            self._testTime = float(testTime)
-        except ValueError as ve:
-            print('Error: When creating a test definition step, the test time \
-must be a floating point value or something convertable to a floating point value. \
-Test time not set.')
-            self._testTime = None
-            print(ve)
-
-        try:
-            self._rampTime = float(rampTime)
-        except ValueError as ve:
-            print('Error: When creating a test definition step, the ramp time \
-must be a floating point value or something convertable to a floating point value. \
-Ramp time not set.')
-            self._rampTime = None
-            print(ve)
-
-        try:
-            self._delayTime = float(delayTime)
-        except ValueError as ve:
-            print('Error: When creating a test definition step, the delay time \
-must be a floating point value or something convertable to a floating point value. \
-Delay time not set.')
-            self._delayTime = None
-            print(ve)
-
-        try:
-            self._testVoltage = float(testVoltage)
-        except ValueError as ve:
-            print('Error: When creating a test definition step, the test voltage \
-must be a floating point value or something convertable to a floating point value. \
-Test voltage not set.')
-            self._testVoltage = None
-            print(ve)
-
-
+        if data is not None: # data specified
+            # data must be a dictionary, or something convertable to a dictionary
+            try:
+                self._stepData = dict(data)
+            except ValueError as ve:
+                self._stepData = None
+                print('Error: When creating a test definition step, the data \
+must be a dictionary, or something convertable to an dictionary. Step data not set.')
+                print(ve)
+        else: # no data specified
+            self._stepData = None
 
     def __repr__(self):
-        outputMsg =  '{:15} {:6} {:15} {:36}'.format('\nStep Number: ', \
+        outputMsg =  '{:19}{:<9}{:15}{:<36}'.format('\n\nStep Number: ', \
                 self.stepNum, 'Step GUID: ', self.stepGuid)
-        outputMsg += '{:18} {}'.format('\nStep Description: ', self.stepDescription)
-        outputMsg += '{:15} {:6} {:15} {:36}'.format('\nStep Method: ', \
+        outputMsg += '{:19}{}'.format('\nStep Description: ', self.stepDescription)
+        outputMsg += '{:18}{:<9}{:15}{:<36}'.format('\nStep Method: ', \
                 self.stepMethod, 'Step Mode: ', self.stepMode)
-        outputMsg += '{:15} {:6} {:15} {:36}'.format('\nCurrent Range: ', \
+        outputMsg += '{:18}{:<9}{:15}{:<36}'.format('\nCurrent Range: ', \
                 self.currentRange, 'Current Limit: ', self.currentLimit)
-        outputMsg += '{:15} {:6} {:15} {:36}'.format('\nTest Time: ', \
+        outputMsg += '{:18}{:<9.3f}{:15}{:<.3f}'.format('\nTest Time: ', \
                 self.testTime, 'Ramp Time: ', self.rampTime)
-        outputMsg += '{:15} {:6} {:15} {:36}'.format('\nDelay Time: ', \
+        outputMsg += '{:18}{:<9}{:15}{:<36}'.format('\nDelay Time: ', \
                 self.delayTime, 'Test Voltage: ', self.testVoltage)
 
         return(outputMsg)
@@ -131,157 +57,75 @@ Test voltage not set.')
 
     @stepNum.setter
     def stepNum(self, stepNum):
+        # step number must be an integer, or something convertable to an integer
         try:
             self._stepNum = int(stepNum)
         except ValueError as ve:
-            print('Error: When setting the test definition step number, the step number \
-must be an integer, or something convertable to an integer. Step number not set.')
             self._stepNum = None
+            print('Error: When createing a test definition step, the step number \
+must be an integer, or something convertable to an integer. Step number not set.')
             print(ve)
 
     @property
     def stepGuid(self):
-        return self._stepGuid
-
-    @stepGuid.setter
-    def stepGuid(self, stepGuid):
-        try:
-            self._stepGuid = str(stepGuid)
-        except ValueError as ve:
-            print('Error: When setting the definition step GUID, the step GUID \
-must be a string, or something convertable to a string. Step GUID not set.')
-            self._stepGuid = None
-            print(ve)
+        # returned option names are all lower case
+        return str(self._stepData.get(constants.DFN_STEP_GUID_OPTNAME.lower()))
 
     @property
     def stepMethod(self):
-        return self._stepMethod
-
-    @stepMethod.setter
-    def stepMethod(self, stepMethod):
+        # returned option names are all lower case
         try:
-            self._stepMethod = int(stepMethod)
+            return int(self._stepData.get(constants.DFN_STEP_METHOD_OPTNAME.lower()))
         except ValueError as ve:
-            print('Error: When setting the test definition step method, the step method \
-must be an integer, or something convertable to an integer. Step method not set.')
-            self._Method = None
-            print(ve)
+            return None
 
     @property
     def stepMode(self):
-        return self._stepMode
-
-    @stepMode.setter
-    def stepMode(self, stepMode):
         try:
-            self._stepMode = int(stepMode)
+            return int(self._stepData.get(constants.DFN_STEP_MODE_OPTNAME.lower()))
         except ValueError as ve:
-            print('Error: When setting the test definition step mode, the step mode \
-must be an integer, or something convertable to an integer. Step mode not set.')
-            self._stepMode = None
-            print(ve)
+            return None
 
     @property
     def stepDescription(self):
-        return self._stepDescription
-
-    @stepDescription.setter
-    def stepDescription(self, stepDescription):
-        try:
-            self._stepDescription = str(stepDescription)
-        except ValueError as ve:
-            print('Error: When setting the test definition step description, the step description \
-must be a string, or something convertable to a string. Step description not set.')
-            self._stepDescription = None
-            print(ve)
+        return str(self._stepData.get(constants.DFN_STEP_DESC_OPTNAME.lower()))
 
     @property
     def currentRange(self):
-        return self._currentRange
-
-    @currentRange.setter
-    def currentRange(self, currentRange):
-        try:
-            self._currentRange = str(currentRange)
-            # TODO: derive and store current units from the given limit (mA, uA, etc)
-        except ValueError as ve:
-            print('Error: When setting the test definition current range, the current range \
-must be a string, or something convertable to a string. Current range not set.')
-            self._currentRange = None
-            print(ve)
+        return str(self._stepData.get(constants.DFN_STEP_CURR_RNG_OPTNAME.lower()))
 
     @property
     def currentLimit(self):
-        return self._currentLimit
-
-    @currentLimit.setter
-    def currentLimit(self, currentLimit):
         try:
-            self._currentLimit = float(currentLimit)
+            return float(self._stepData.get(constants.DFN_STEP_CURR_LIM_OPTNAME.lower()))
         except ValueError as ve:
-            print('Error: When creating a test definition step, the current limit\
-must be a floating point value or something convertable to a floating point value. \
-Current limit not set.')
-            self._currentLimit= None
-            print(ve)
+            return None
 
     @property
     def testTime(self):
-        return self._testTime
-
-    @testTime.setter
-    def testTime(self, testTime):
         try:
-            self._testTime = float(testTime)
+            return float(self._stepData.get(constants.DFN_STEP_TEST_TIME_OPTNAME.lower()))
         except ValueError as ve:
-            print('Error: When setting the test definition test time, the test time \
-must be a floating point value or something convertable to a floating point value. \
-Test time not set.')
-            self._testTime = None
-            print(ve)
+            return None
 
     @property
     def rampTime(self):
-        return self._rampTime
-
-    @rampTime.setter
-    def rampTime(self, rampTime):
         try:
-            self._rampTime = float(rampTime)
+            return float(self._stepData.get(constants.DFN_STEP_RAMP_TIME_OPTNAME.lower()))
         except ValueError as ve:
-            print('Error: When setting the test definition rampt time, the ramp time \
-must be a floating point value or something convertable to a floating point value. \
-Ramp time not set.')
-            self._rampTime = None
-            print(ve)
+            return None
 
     @property
     def delayTime(self):
-        return self._delayTime
-
-    @delayTime.setter
-    def delayTime(self, delayTime):
         try:
-            self._delayTime = float(delayTime)
+           return float(self._stepData.get(constants.DFN_STEP_DLY_TIME_OPTNAME.lower()))
         except ValueError as ve:
-            print('Error: When setting the test definition delay time, the delay time \
-must be a floating point value or something convertable to a floating point value. \
-Delay time not set.')
-            self._delayTime = None
-            print(ve)
+            return None
 
     @property
     def testVoltage(self):
-        return self._testVoltage
-
-    @testVoltage.setter
-    def testVoltage(self, testVoltage):
         try:
-            self._testVoltage = float(testVoltage)
+            return float(self._stepData.get(constants.DFN_STEP_TEST_VOLT_OPTNAME.lower()))
         except ValueError as ve:
-            print('Error: When creating a test definition test voltage, the test voltage \
-must be a floating point value or something convertable to a floating point value. \
-Test voltage not set.')
-            self._testVoltage = None
-            print(ve)
+            return None
 
