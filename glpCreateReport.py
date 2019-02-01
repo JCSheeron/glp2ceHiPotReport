@@ -225,7 +225,10 @@ data will be used to try and determne the correct test definition file to use.')
             print('Unicode Error: Unable to load test definition file: ' + dfnName +
             '. Check encoding. ' + args.testDfnEncoding + ' was expected.')
             print(ue)
-
+    for dfn in testDfns:
+        print(dfn.name)
+        print(dfn.id)
+        print(dfn)
 # **** Figure out what test data file to use, and load it (or them!!)
 # Get a list of test data files in the data path
 testDataNames = listFiles(testDataPath)
@@ -273,8 +276,9 @@ elif args.dataFile != '' and args.dataFile is not None and args.dataFile in test
                 # create a test object from it
                 tests.append(Glp2TestData(test, fileDataSet[0]))
 
-            for t in tests:
-                print(t)
+            # for t in tests:
+            if tests is not None:
+                print(tests[0])
 
     except UnicodeDecodeError as ude:
         print('Unicode Error: Unable to load test data file: ' + args.dataFile +

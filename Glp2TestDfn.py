@@ -16,25 +16,42 @@ class Glp2TestDfn(object):
         # Get the config specified by the fileName
         if fileName is None:
             self._config = configparser.ConfigParser()
-            self._id = None
+            self_numberOfSteps = 0
         else:
             self._config = configparser.ConfigParser()
             self._config.read(fileName, fileEncoding)
-            if self._config.has_option('General Data', 'GUID'):
-                self._id = self._config['General Data']['GUID']
-            else:
-                self._id = 'No GUID found'
+            self._numberOfSteps = self.GetNumOfSteps()
+
+
+
 
     def __repr__(self):
-        outputMsg=  '{:6} {}'.format('\nName: ', self._name + '\n')
-        outputMsg+= '{:6} {}'.format('Id: ', self._id)
+        outputMsg=  '{:6} {}'.format('\nName: ', self.name + '\n')
+        outputMsg+= '{:6} {}'.format('Id: ', self.id)
         outputMsg+=  '{}'.format('\nConfiguraiton:\n')
-        # construct the config data into the message
-        for section in self._config:
-            outputMsg+= section + '\n'
-            for option in self._config[section]:
-                outputMsg+= '  ' + option + ':' + self._config[section][option] + '\n'
+        outputMsg+= '{:17} {}'.format('\nNumber of Steps: ', self.numberOfSteps)
+#        # construct the config data into the message
+#        for section in self._config:
+#            outputMsg+= section + '\n'
+#            for option in self._config[section]:
+#                outputMsg+= '  ' + option + ':' + self._config[section][option] + '\n'
         return(outputMsg)
+
+    # this function will determine how many steps are contained in the
+    # test definition. Pass a defaulted setion prefix.
+    def GetNumOfSteps(self, sectionPrefix='TestStep'):
+        numOfSteps = 0
+        stepNum = 1
+        # construct section names and look for them until one isn't found
+        # No do..while, so emulate with a while loop
+        while True:
+            sectionName = '[' + sectionPrefix + str(stepNum) + ']'
+            print(sectionName)
+            if self._config.has_section(sectionName):
+                numOfSteps += 1
+                stepNum += 1
+            else:
+                return numOfSteps
 
     # properties
     @property
@@ -47,7 +64,17 @@ class Glp2TestDfn(object):
 
     @property
     def id(self):
-        return self._id
+        if self._config.has_option('General Data', 'GUID'):
+            return(self._config['General Data']['GUID'])
+        else:
+            return None
+
+    @property
+    def generalComments(self):
+        if self._config.has_option('General Data', 'Comments'):
+            return(self._config['General Data']['Comments'])
+        else:
+            return None
 
     @property
     def config(self):
@@ -57,8 +84,8 @@ class Glp2TestDfn(object):
     def config(self, newFile, fileEncoding='UTF-8'):
         self._config = configParser.ConfigParser()
         self._config.read(newFile, fileEncoding)
-        if self._config.has_option('General Data', 'GUID'):
-            self._id = self._config['General Data']['GUID']
-        else:
-            self._id = 'No GUID found'
+
+    @property
+    def numberOfSteps(self):
+        return self._numberOfSteps
 
