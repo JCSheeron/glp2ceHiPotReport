@@ -16,7 +16,7 @@ class Glp2TestDfn(object):
         # Get the config specified by the fileName
         if fileName is None:
             self._config = configparser.ConfigParser()
-            self_numberOfSteps = 0
+            self._numberOfSteps = 0
         else:
             self._config = configparser.ConfigParser()
             self._config.read(fileName, fileEncoding)
@@ -29,7 +29,7 @@ class Glp2TestDfn(object):
         outputMsg=  '{:6} {}'.format('\nName: ', self.name + '\n')
         outputMsg+= '{:6} {}'.format('Id: ', self.id)
         outputMsg+=  '{}'.format('\nConfiguraiton:\n')
-        outputMsg+= '{:17} {}'.format('\nNumber of Steps: ', self.numberOfSteps)
+        outputMsg+= '{:17} {}'.format('\nNumber of Steps: ', self._numberOfSteps)
 #        # construct the config data into the message
 #        for section in self._config:
 #            outputMsg+= section + '\n'
@@ -45,8 +45,7 @@ class Glp2TestDfn(object):
         # construct section names and look for them until one isn't found
         # No do..while, so emulate with a while loop
         while True:
-            sectionName = '[' + sectionPrefix + str(stepNum) + ']'
-            print(sectionName)
+            sectionName = sectionPrefix + str(stepNum)
             if self._config.has_section(sectionName):
                 numOfSteps += 1
                 stepNum += 1
