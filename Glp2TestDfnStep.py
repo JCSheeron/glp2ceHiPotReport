@@ -13,7 +13,7 @@ import Glp2Constants as constants
 #
 class Glp2TestDfnStep(object):
     def __init__(self, stepNum, data=None):
-        
+
         # step number must be an integer, or something convertable to an integer
         try:
             self._stepNum = int(stepNum)

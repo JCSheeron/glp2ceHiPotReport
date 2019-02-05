@@ -35,18 +35,29 @@
 from Glp2TestDataStep import Glp2TestDataStep
 
 class Glp2TestData(object):
-    def __init__(self, fileName=None, data=None, header=None, testGuidIdx=0,
-                 testProgramNameIdx=25, testProgramGuidIdx=49, deviceNumberIdx=31,
-                 testStepGuidIdx=1, stepNumberIdx=2, timestampIdx=30, graphDataIdx=76):
+    def __init__(self, fileName=None, data=None, header=None, decimalSeparator=',',
+                 testGuidIdx=0, testProgramNameIdx=25, testProgramGuidIdx=49,
+                 deviceNumberIdx=31, testStepGuidIdx=1, stepNumberIdx=2,
+                 nomVoltIdx=6, nomVoltUnitIdx=7, actVoltIdx=8, actVoltUnitIdx=9,
+                 currentLimIdx=10, currentLimUnitIdx=11, actCurrIdx=12,
+                 actCurrUnitIdx=13, timestampIdx=30, graphDataIdx=76):
         # The data expected is a tuple, list, or something convertable to a
         # tuple that has an entire row of data from a test data file.  The
         # indexes are the normal column counts, starting at zero.
         #
         # These parameters are just passed through to the Glp2TestDataStep ctor:
+        #   deviceNumberIdx (used by both Glp2TestData and Glp2TestDataStep)
         #   testStepGuidIdx
         #   stepNumberIdx
+        #   nomVoltIdx
+        #   nomVoltUnitIdx
+        #   actVoltIdx
+        #   actVoltUnitIdx
+        #   currentLimIdx
+        #   currentLimUnitIdx
+        #   actCurrIdx
+        #   actCurrUnitIdx
         #   timestampIdx
-        #   deviceNumberIdx (used by both Glp2TestData and Glp2TestDataStep)
         #   graphDataIdx
 
         # Capture the file name
@@ -95,10 +106,19 @@ No Data Captured.')
                         # Add a step object to the list of step objects,
                         # passing the parameters through that the step ctor needs.
                         steps.append(Glp2TestDataStep(row, self._dataHeader,
+                                     decimalSeparator,
                                      testStepGuidIdx=testStepGuidIdx,
                                      stepNumberIdx=stepNumberIdx,
-                                     timestampIdx=timestampIdx,
                                      deviceNumberIdx=deviceNumberIdx,
+                                     nomVoltIdx=nomVoltIdx,
+                                     nomVoltUnitIdx=nomVoltUnitIdx,
+                                     actVoltIdx=actVoltIdx,
+                                     actVoltUnitIdx=actVoltUnitIdx,
+                                     currentLimIdx=currentLimIdx,
+                                     currentLimUnitIdx=currentLimUnitIdx,
+                                     actCurrIdx=actCurrIdx,
+                                     actCurrUnitIdx=actCurrUnitIdx,
+                                     timestampIdx=timestampIdx,
                                      graphDataIdx=graphDataIdx))
                 # All the steps have been retreived.
                 # Put them into a memeber tuple
@@ -125,25 +145,12 @@ No Data Captured.')
 #        else:
 #            outputMsg+= '  No Header\n'
 #
+        # steps
         if self._steps is not None:
             outputMsg+= '\n{:16}\n'.format('Steps: ')
             for step in self._steps:
                 outputMsg+= str(step)
-#
-#        # data - may include header info also
-#        if self._dataHeader is not None and self._rawData is not None:
-#            # data and header info avail -- include header info
-#            outputMsg+= '{:16} \n'.format('Test Data: ')
-#            for idx, heading in enumerate(self._dataHeader):
-#                for value in self._rawData:
-#                    outputMsg+= '  {:4}-{:4<}: {}\n'.format(idx, heading, value)
-#        elif self._dataHeader is None and self._rawData is not None:
-#            # data but no header info
-#            for idx, value in enumerate(self._rawData):
-#                outputMsg+= '  {:4}: {}\n'.format(idx, value)
-#        else:
-#            # no data stored!!
-#            outputMsg+= '  No Data\n'
+
         return(outputMsg)
 
     # properties

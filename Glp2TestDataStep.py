@@ -37,8 +37,11 @@
 #
 
 class Glp2TestDataStep(object):
-    def __init__(self, data=None, header=None, testStepGuidIdx=1, stepNumberIdx=2,
-            timestampIdx=30, deviceNumberIdx=31, graphDataIdx=76):
+    def __init__(self, data=None, header=None, decimalSeparator = ',',
+                 testStepGuidIdx=1, stepNumberIdx=2, deviceNumberIdx=31,
+                 nomVoltIdx=6, nomVoltUnitIdx=7, actVoltIdx=8,
+                 actVoltUnitIdx=9, currentLimIdx=10, currentLimUnitIdx=11,
+                 actCurrIdx=12, actCurrUnitIdx=13, timestampIdx=30, graphDataIdx=76):
         # The data expected is a tuple, list, or something convertable to a
         # tuple shat has an entire row of data from a test data file.  The
         # indexes are the normal column counts, starting at zero.
@@ -74,32 +77,41 @@ No step information captured.')
         else: # no data provided
             self._rawData = None
 
+        self._decimalSeparator = decimalSeparator
         self._testStepGuidIdx = testStepGuidIdx
         self._stepNumberIdx = stepNumberIdx
-        self._timestampIdx = timestampIdx
         self._deviceNumberIdx = deviceNumberIdx
+        self._nomVoltIdx = nomVoltIdx
+        self._nomVoltUnitIdx = nomVoltUnitIdx
+        self._actVoltIdx = actVoltIdx
+        self._actVoltUnitIdx = actVoltUnitIdx
+        self._currentLimIdx = currentLimIdx
+        self._currentLimUnitIdx = currentLimUnitIdx
+        self._actCurrIdx = actCurrIdx
+        self._actCurrUnitIdx = actCurrUnitIdx
+        self._timestampIdx = timestampIdx
         self._graphDataIdx = graphDataIdx
 
     def __repr__(self):
-        outputMsg=  '{:16} {}\n'.format('Test Step GUID: ', self.testStepGuid)
-        outputMsg+= '{:16} {}\n'.format('Test Step Number:', self.stepNumber)
-        outputMsg+= '{:16} {}\n'.format('Test Step Timestamp: ', self.testTimestamp)
-        outputMsg+= '{:16} {}\n'.format('Test Step Device Number: ', self.deviceNumber)
-
-#        # data - may include header info also
-#        if self._dataHeader is not None and self._rawData is not None:
-#            # data and header info avail -- include header info
-#            outputMsg+= '{:16} \n'.format('Test Data: ')
-#            for idx, heading in enumerate(self._dataHeader):
-#                for value in self._rawData:
-#                    outputMsg+= '  {:4}-{:4<}: {}\n'.format(idx, heading, value)
-#        elif self._dataHeader is None and self._rawData is not None:
-#            # data but no header info
-#            for idx, value in enumerate(self._rawData):
-#                outputMsg+= '  {:4}: {}\n'.format(idx, value)
-#        else:
-#            # no data stored!!
-#            outputMsg+= '  No Data\n'
+        outputMsg=  '{:21}{:<23}{:18}{}\n'.format('Test Step Number: ',
+                                                    self.stepNumber,
+                                                    'Test Step GUID: ',
+                                                    self.testStepGuid)
+        outputMsg+= '{:21}{}\n'.format('Device Number: ',
+                                          self.deviceNumber)
+        outputMsg+= '{:21}{:23}{:18}{}\n'.format('Nominal Voltage: ',
+                                                    str(self.nominalVoltage) + ' ' +
+                                                    str(self.nominalVoltageUnit),
+                                                    'Measured Voltage: ',
+                                                    str(self.measuredVoltage) + ' ' +
+                                                    str(self.measuredVoltageUnit))
+        outputMsg+= '{:21}{:23}{:18}{}\n'.format('Current Limit: ',
+                                                    str(self.currentLimit) + ' ' +
+                                                    str(self.currentLimitUnit),
+                                                    'Measured Current: ',
+                                                    str(self.measuredCurrent) + ' ' +
+                                                    str(self.measuredCurrentUnit))
+        outputMsg+= '{:21}{}\n\n'.format('Test Step Timestamp: ', self.testTimestamp)
 
         return(outputMsg)
 
@@ -116,15 +128,7 @@ No step information captured.')
     def stepNumber(self):
         # get the value from the raw data if the data is present
         if self._rawData is not None and self._stepNumberIdx + 1 <= len(self._rawData):
-            return self._rawData[self._stepNumberIdx]
-        else:
-            return None
-
-    @property
-    def testTimestamp(self):
-        # get the value from the raw data if the data is present
-        if self._rawData is not None and self._timestampIdx + 1 <= len(self._rawData):
-            return self._rawData[self._timestampIdx]
+            return int(self._rawData[self._stepNumberIdx])
         else:
             return None
 
@@ -133,6 +137,106 @@ No step information captured.')
         # get the value from the raw data if the data is present
         if self._rawData is not None and self._deviceNumberIdx + 1 <= len(self._rawData):
             return self._rawData[self._deviceNumberIdx]
+        else:
+            return None
+
+    @property
+    def nominalVoltage(self):
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._nomVoltIdx + 1 <= len(self._rawData):
+            if self._decimalSeparator == ',':
+                # if using a comma as a decimal separator, also assume a period
+                # may be used as a thousands separator.  First replace all periods
+                # with an empty string (get rid of them), and then replace all commas
+                # with periods.
+                return float(self._rawData[self._nomVoltIdx].replace('.','').replace(',', '.'))
+            else: # assume decimal separator is a period
+                return float(self._rawData[self._nomVoltIdx])
+        else:
+            return None
+
+    @property
+    def nominalVoltageUnit(self):
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._nomVoltUnitIdx + 1 <= len(self._rawData):
+            return self._rawData[self._nomVoltUnitIdx]
+        else:
+            return None
+
+    @property
+    def measuredVoltage(self):
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._actVoltIdx + 1 <= len(self._rawData):
+            if self._decimalSeparator == ',':
+                # if using a comma as a decimal separator, also assume a period
+                # may be used as a thousands separator.  First replace all periods
+                # with an empty string (get rid of them), and then replace all commas
+                # with periods.
+                return float(self._rawData[self._actVoltIdx].replace('.','').replace(',', '.'))
+            else: # assume decimal separator is a period
+                return float(self._rawData[self._actVoltIdx])
+        else:
+            return None
+
+    @property
+    def measuredVoltageUnit(self):
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._actVoltUnitIdx + 1 <= len(self._rawData):
+            return self._rawData[self._actVoltUnitIdx]
+        else:
+            return None
+
+    @property
+    def currentLimit(self):
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._currentLimIdx + 1 <= len(self._rawData):
+            if self._decimalSeparator == ',':
+                # if using a comma as a decimal separator, also assume a period
+                # may be used as a thousands separator.  First replace all periods
+                # with an empty string (get rid of them), and then replace all commas
+                # with periods.
+                return float(self._rawData[self._currentLimIdx].replace('.','').replace(',', '.'))
+            else: # assume decimal separator is a period
+                return float(self._rawData[self._currentLimIdx])
+        else:
+            return None
+
+    @property
+    def currentLimitUnit(self):
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._currentLimUnitIdx + 1 <= len(self._rawData):
+            return self._rawData[self._currentLimUnitIdx]
+        else:
+            return None
+
+    @property
+    def measuredCurrent(self):
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._actCurrIdx + 1 <= len(self._rawData):
+            if self._decimalSeparator == ',':
+                # if using a comma as a decimal separator, also assume a period
+                # may be used as a thousands separator.  First replace all periods
+                # with an empty string (get rid of them), and then replace all commas
+                # with periods.
+                return float(self._rawData[self._actCurrIdx].replace('.','').replace(',', '.'))
+            else: # assume decimal separator is a period
+                return float(self._rawData[self._actCurrIdx])
+        else:
+            return None
+
+    @property
+    def measuredCurrentUnit(self):
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._actCurrUnitIdx + 1 <= len(self._rawData):
+            return self._rawData[self._actCurrUnitIdx]
+        else:
+            return None
+
+    @property
+    def testTimestamp(self):
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._timestampIdx + 1 <= len(self._rawData):
+            return self._rawData[self._timestampIdx]
         else:
             return None
 
@@ -150,7 +254,7 @@ No step information captured.')
             return None
 
     @property
-    def len(self):
+    def len(self): # column count, 1 based
         return len(self._rawData)
 
     @property

@@ -82,16 +82,17 @@ class Glp2TestDfn(object):
         self._name = str(newName) # use the string version
 
     @property
-    def id(self):
-        if self._config.has_option(constants.DFN_GENERAL_SECTION, constants.DFN_STEP_GUID_OPTNAME):
-            return(self._config[constants.DFN_GENERAL_SECTION][constants.DFN_STEP_GUID_OPTNAME])
+    def dfnGuid(self):
+        if self._config.has_option(constants.DFN_GENERAL_SECTION, constants.DFN_GENSEC_GUID_OPTNAME):
+            return(self._config[constants.DFN_GENERAL_SECTION][constants.DFN_GENSEC_GUID_OPTNAME])
         else:
             return None
 
     @property
     def generalComments(self):
-        if self._config.has_option(constants.DFN_GENERAL_SECTION, constants.DFN_GENSEC_COMMENTS):
-            return(self._config([constants.DFN_GENERAL_SECTION][constants.DFN_GENSEC_COMMENTS]))
+        if self._config.has_option(constants.DFN_GENERAL_SECTION,
+                constants.DFN_GENSEC_COMMENTS_OPTNAME):
+            return(self._config([constants.DFN_GENERAL_SECTION][constants.DFN_GENSEC_COMMENTS_OPTNAME]))
         else:
             return None
 

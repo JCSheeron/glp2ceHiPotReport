@@ -7,9 +7,13 @@
 # Test definition file section and option names
 # Section names
 DFN_GENERAL_SECTION = 'General Data'
-DFN_GENSEC_COMMENTS = 'Comments'
-DFN_STEP_SECTION_PREFIX = 'TestStep' # e.g. full section name would be [TestStep1]
+DFN_GENSEC_COMMENTS_OPTNAME = 'Comments'
+# def id
+DFN_GENSEC_GUID_OPTNAME = 'GUID'
+DFN_STEP_SECTION_PREFIX = 'TestStep'
+# e.g. full section name would be [TestStep1] or [TestStep2]
 # Step option names
+# step id:
 DFN_STEP_GUID_OPTNAME = 'GUID'
 DFN_STEP_METHOD_OPTNAME = 'StepMethod'
 DFN_STEP_MODE_OPTNAME = 'Mode'

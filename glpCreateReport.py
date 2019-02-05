@@ -188,6 +188,12 @@ if args.verbose:
     print('\nTest Data Path: ' + testDataPath)
     print('Test Definition Path: ' + testDfnPath)
 
+# get the decimal separator from the file, or use the default of a ',' (the euro way)
+if config.has_option('TestData', 'decimalSeparator'):
+    decimalSeparator = config['TestData']['decimalSeparator']
+else:
+    decimalSeparator = ','
+
 # **** Figure out what test definition file to use, and load it (or them!!)
 # Get a list of test definition files in the test definition path
 testDfnNames = listFiles(testDfnPath)
@@ -274,7 +280,9 @@ elif args.dataFile == '' or args.dataFile is None:
            # file should be considered test data
             try:
                 with open(join(testDataPath, fileName), mode='r', encoding=args.dataFileEncoding) as dataCsvFile:
-                    fileTestList = MakeTestList(fileName, csv.reader(dataCsvFile, delimiter = ';'))
+                    fileTestList = MakeTestList(fileName,
+                                                csv.reader(dataCsvFile, delimiter = ';'),
+                                                decimalSeparator)
 
             except UnicodeDecodeError as ude:
                 print('Unicode Error: Unable to load test data file: ' + args.dataFile +
