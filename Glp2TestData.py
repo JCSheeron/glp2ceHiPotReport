@@ -137,15 +137,6 @@ No Data Captured.')
         outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) Name: ', self.testProgramName)
         outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) GUID: ', self.testProgramGuid)
         outputMsg+= '{:26} {}\n'.format('Device Number: ', self.deviceNumber)
-#        # header
-#        outputMsg+= '\n{:16} \n'.format('Data Header: ')
-#        if self._dataHeader is not None:
-#            for idx, heading in enumerate(self._dataHeader):
-#                outputMsg+= '  {:2}: {}\n'.format(idx, heading)
-#        else:
-#            outputMsg+= '  No Header\n'
-#
-        # steps
         if self._steps is not None:
             outputMsg+= '\n{:16}\n'.format('Steps: ')
             for step in self._steps:

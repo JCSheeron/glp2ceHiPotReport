@@ -112,7 +112,28 @@ No step information captured.')
                                                     str(self.measuredCurrent) + ' ' +
                                                     str(self.measuredCurrentUnit))
         outputMsg+= '{:21}{}\n\n'.format('Test Step Timestamp: ', self.testTimestamp)
-
+        # print out all the test data. Use the header if it is available
+        if self.header is not None and self.data is not None:
+            # both header and data available
+            outputMsg += '{}'.format('Header and data available.\n')
+            outputMsg += '{}'.format('(Col) Heading: Value\n')
+            for col, colHeading in enumerate(self.header):
+                outputMsg += '({:3d}) {:27}: {}\n'.format(col, colHeading, self.data[col])
+        elif self.header is not None and self.data is None:
+            # header but no data available
+            outputMsg += '{}'.format('Header available, but no data available.\n')
+            outputMsg += '{}'.format('(Col) Heading\n')
+            for col, colHeading in enumerate(self.header):
+                outputMsg += '({:3d}) {}\n'.format(col, colHeading)
+        elif self.header is None and self.data is not None:
+            # no header but data is avilable
+            outputMsg += '{}'.format('No header available, but data available.\n')
+            outputMsg += '{}'.format('(Col) Value\n')
+            for col, value in enumerate(self.data):
+                outputMsg += '({}) {}\n'.format(str(col), value )
+        else:
+            # no data and no header
+            pass # nothing to do
         return(outputMsg)
 
     # properties

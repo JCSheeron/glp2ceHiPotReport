@@ -216,6 +216,8 @@ elif args.testDfnFile != '' and args.testDfnFile is not None and args.testDfnFil
     try:
         testDfns.append(Glp2TestDfn(args.testDfnFile, join(testDfnPath, args.testDfnFile),
                                     args.testDfnEncoding))
+        # convert to a tuple to prevent change
+        testDfns = tuple(testDfns)
     except UnicodeError as  ue:
         print('Unicode Error: Unable to load test definition file: ' + args.testDfnFile +
             '. Check encoding. ' + args.testDfnEncoding + ' was expected.')
@@ -225,7 +227,7 @@ elif args.testDfnFile == '' or args.testDfnFile is None:
     # Test dfn file not specified. Load all the definitions.
     print('\nThere was no test definition file specified.  The test definition id in the \
 data will be used to try and determne the correct test definition file to use.')
-    # For each definition file name, create and append a Glp2TestDen object.
+    # For each definition file name, create and append a Glp2TestDfn object.
     # Exclude files starting with '.', or files that don't end with '*.tpr' (case insensitive)
     # The no starting dot filters out hidden or locked files, and the .tpr
     # requirement at the end means that only *.tpr files are considered.
@@ -237,6 +239,11 @@ data will be used to try and determne the correct test definition file to use.')
                 print('Unicode Error: Unable to load test definition file: ' + dfnName +
                 '. Check encoding. ' + args.testDfnEncoding + ' was expected.')
                 print(ue)
+    # if we get here, we should have a list of test definitions.
+    # convert to a tuple to prevent change
+    testDfns = tuple(testDfns)
+
+# at this point, testDfns is a tuple containing the test definitions to consider
 
 # **** Figure out what test data file to use, and load it (or them!!)
 # Get a list of test data files in the data path
@@ -259,7 +266,9 @@ elif args.dataFile != '' and args.dataFile is not None and args.dataFile in test
     # **** read the csv file into a data frame.  The first row is treated as the header
     try:
         with open(join(testDataPath, args.dataFile), mode='r', encoding=args.dataFileEncoding) as dataCsvFile:
-            tests = MakeTestList(args.dataFile, csv.reader(dataCsvFile, delimiter = ';'))
+            tests = MakeTestList(args.dataFile,
+                                 csv.reader(dataCsvFile, delimiter = ';'),
+                                 decimalSeparator)
 
     except UnicodeDecodeError as ude:
         print('Unicode Error: Unable to load test data file: ' + args.dataFile +
@@ -295,23 +304,29 @@ elif args.dataFile == '' or args.dataFile is None:
 
 # If we get here, tests[] contains all the test data from one or more test data (*.csv) files.
 # Convert it to a tuple to prevent bugs from changing it.
+tests = tuple(tests)
+
+# **** Link the test data with the test definition
+# At this point we have the test defintions loaded in the testDfns(...) tuple,
+# and the test data loaded in the tests(...) tuple.
+# Use the GUIDs to link the two. Loop through the test data tuple, get the
+# test dfn guid, and then match this guid with a test definition file.
+# Pair the two up, and process them.
 #
-# TODO: At this point we have the test defintions loaded and the test data loaded.  Use
-# the relational guids to relate the two, and create a meaningful, well formatted output.
+# Make a tuple of (test index, test definition index) matching pairs
+prt_tDfn=[]
+for tidx, test in enumerate(tests):
+    for didx, dfn in enumerate(testDfns):
+        if test.testProgramGuid == dfn.dfnGuid:
+            # match found. Create pair
+            prt_tDfn.append((tidx, didx))
+
 #
 # TODO: Parse & Process the graph data
 #
 # TODO: Create a graph (MatPlotLib)
 #
 # TODO: Create a PDF with the text and graph output
-
-tests = tuple(tests)
-print('Number of tests loaded: ' + str(len(tests)))
-for test in tests:
-    #print(test.fileName + ' : ' + test.testProgramName + ' : ' + test.testGuid)
-    print(test)
-
-
 
 # get end processing time
 procEnd = datetime.now()

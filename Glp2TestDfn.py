@@ -44,17 +44,18 @@ class Glp2TestDfn(object):
                 pass    # nothing to do!
 
     def __repr__(self):
-        outputMsg=  '{:6} {}'.format('\nName: ', self.name + '\n')
-        outputMsg+= '{:6} {}'.format('Test GUID: ', self.id + '\n')
-        outputMsg+=  '{}'.format('Test Configuraiton:\n')
-        outputMsg+= '{:17} {}'.format('Number of Steps: ', self._numberOfSteps + '\n')
+        outputMsg=  '\n{:6} {}\n'.format('Name: ', self.name)
+        outputMsg+= '{:6} {}\n'.format('Test GUID: ', self.dfnGuid)
+        outputMsg+= '{:6} {}\n'.format('General generalComments: ', self.generalComments)
+        outputMsg+= '{:17} {}\n'.format('Number of Steps: ', str(self._numberOfSteps))
+        outputMsg+=  '{}\n'.format('Test Steps:')
         for step in self._steps:
             outputMsg += str(step)
-#        # construct the config data into the message
-#        for section in self._config:
-#            outputMsg+= section + '\n'
-#            for option in self._config[section]:
-#                outputMsg+= '  ' + option + ':' + self._config[section][option] + '\n'
+        outputMsg+=  '\n\n{}\n'.format('Entire Test Definition Configuration:')
+        for section in self.config:
+            outputMsg += '{}\n'.format(section)
+            for option in self.config[section]:
+                outputMsg += '{}{}{}{}\n'.format('  ', option, ':', self.config[section][option])
         return(outputMsg)
 
     # this function will determine how many steps are contained in the
@@ -92,7 +93,7 @@ class Glp2TestDfn(object):
     def generalComments(self):
         if self._config.has_option(constants.DFN_GENERAL_SECTION,
                 constants.DFN_GENSEC_COMMENTS_OPTNAME):
-            return(self._config([constants.DFN_GENERAL_SECTION][constants.DFN_GENSEC_COMMENTS_OPTNAME]))
+            return(self._config[constants.DFN_GENERAL_SECTION][constants.DFN_GENSEC_COMMENTS_OPTNAME])
         else:
             return None
 

@@ -36,7 +36,7 @@ must be a dictionary, or something convertable to an dictionary. Step data not s
             self._stepData = None
 
     def __repr__(self):
-        outputMsg =  '{:19}{:<9}{:15}{:<36}'.format('\n\nStep Number: ', \
+        outputMsg =  '{:19}{:<9}{:15}{:<36}'.format('\nStep Number: ', \
                 self.stepNum, 'Step GUID: ', self.stepGuid)
         outputMsg += '{:19}{}'.format('\nStep Description: ', self.stepDescription)
         outputMsg += '{:18}{:<9}{:15}{:<36}'.format('\nStep Method: ', \
@@ -47,7 +47,9 @@ must be a dictionary, or something convertable to an dictionary. Step data not s
                 self.testTime, 'Ramp Time: ', self.rampTime)
         outputMsg += '{:18}{:<9}{:15}{:<36}'.format('\nDelay Time: ', \
                 self.delayTime, 'Test Voltage: ', self.testVoltage)
-
+        outputMsg += '\n\nRaw Step Data:'
+        for key in self.stepData:
+            outputMsg += '\n' + key + ': ' + self.stepData[key]
         return(outputMsg)
 
     # properties
@@ -67,6 +69,10 @@ must be an integer, or something convertable to an integer. Step number not set.
             print(ve)
 
     @property
+    def stepData(self):
+        return self._stepData
+
+    @property
     def stepGuid(self):
         # returned option names are all lower case
         return str(self._stepData.get(constants.DFN_STEP_GUID_OPTNAME.lower()))
@@ -82,21 +88,25 @@ must be an integer, or something convertable to an integer. Step number not set.
     @property
     def stepMode(self):
         try:
+            # returned option names are all lower case
             return int(self._stepData.get(constants.DFN_STEP_MODE_OPTNAME.lower()))
         except ValueError as ve:
             return None
 
     @property
     def stepDescription(self):
+        # returned option names are all lower case
         return str(self._stepData.get(constants.DFN_STEP_DESC_OPTNAME.lower()))
 
     @property
     def currentRange(self):
+        # returned option names are all lower case
         return str(self._stepData.get(constants.DFN_STEP_CURR_RNG_OPTNAME.lower()))
 
     @property
     def currentLimit(self):
         try:
+            # returned option names are all lower case
             return float(self._stepData.get(constants.DFN_STEP_CURR_LIM_OPTNAME.lower()))
         except ValueError as ve:
             return None
@@ -104,6 +114,7 @@ must be an integer, or something convertable to an integer. Step number not set.
     @property
     def testTime(self):
         try:
+            # returned option names are all lower case
             return float(self._stepData.get(constants.DFN_STEP_TEST_TIME_OPTNAME.lower()))
         except ValueError as ve:
             return None
@@ -111,6 +122,7 @@ must be an integer, or something convertable to an integer. Step number not set.
     @property
     def rampTime(self):
         try:
+            # returned option names are all lower case
             return float(self._stepData.get(constants.DFN_STEP_RAMP_TIME_OPTNAME.lower()))
         except ValueError as ve:
             return None
@@ -118,6 +130,7 @@ must be an integer, or something convertable to an integer. Step number not set.
     @property
     def delayTime(self):
         try:
+            # returned option names are all lower case
            return float(self._stepData.get(constants.DFN_STEP_DLY_TIME_OPTNAME.lower()))
         except ValueError as ve:
             return None
@@ -125,6 +138,7 @@ must be an integer, or something convertable to an integer. Step number not set.
     @property
     def testVoltage(self):
         try:
+            # returned option names are all lower case
             return float(self._stepData.get(constants.DFN_STEP_TEST_VOLT_OPTNAME.lower()))
         except ValueError as ve:
             return None
