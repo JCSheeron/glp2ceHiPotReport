@@ -132,6 +132,11 @@ No Data Captured.')
         self._deviceNumberIdx = deviceNumberIdx
 
     def __repr__(self):
+        # TODO: Make output a dictionary or someting in line with the goal of __repr__
+        # __repr__ should have an unambiguous output and create
+        # a 'representation that should look like a valid Python
+        # Epression that could be used to recreate an object with
+        # the same value.'
         outputMsg=  '{:26} {}\n'.format('File Name: ', self.fileName)
         outputMsg+= '{:26} {}\n'.format('Test Id: ', self.testGuid)
         outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) Name: ', self.testProgramName)
@@ -141,8 +146,22 @@ No Data Captured.')
             outputMsg+= '\n{:16}\n'.format('Steps: ')
             for step in self._steps:
                 outputMsg+= str(step)
-
         return(outputMsg)
+
+    def __str__(self):
+        # The goal of __str__ is to create a string representation
+        # of the object that is readable to a user (not a programmer).
+        outputMsg=  '{:26} {}\n'.format('File Name: ', self.fileName)
+        outputMsg+= '{:26} {}\n'.format('Test Id: ', self.testGuid)
+        outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) Name: ', self.testProgramName)
+        outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) GUID: ', self.testProgramGuid)
+        outputMsg+= '{:26} {}\n'.format('Device Number: ', self.deviceNumber)
+        if self._steps is not None:
+            outputMsg+= '\n{:16}\n'.format('Steps: ')
+            for step in self._steps:
+                outputMsg+= str(step)
+        return(outputMsg)
+
 
     # properties
 
@@ -223,8 +242,6 @@ Header not changed.')
                 print(ve)
         else: # nothing specified for header
             self._dataHeader = None
-
-
 
     @property
     def data(self):

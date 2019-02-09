@@ -44,6 +44,11 @@ class Glp2TestDfn(object):
                 pass    # nothing to do!
 
     def __repr__(self):
+        # TODO: Make output a dictionary or someting in line with the goal of __repr__
+        # __repr__ should have an unambiguous output and create
+        # a 'representation that should look like a valid Python
+        # Epression that could be used to recreate an object with
+        # the same value.'
         outputMsg=  '\n{:6} {}\n'.format('Name: ', self.name)
         outputMsg+= '{:6} {}\n'.format('Test GUID: ', self.dfnGuid)
         outputMsg+= '{:6} {}\n'.format('General generalComments: ', self.generalComments)
@@ -57,6 +62,24 @@ class Glp2TestDfn(object):
             for option in self.config[section]:
                 outputMsg += '{}{}{}{}\n'.format('  ', option, ':', self.config[section][option])
         return(outputMsg)
+
+    def __str__(self):
+        # The goal of __str__ is to create a string representation
+        # of the object that is readable to a user (not a programmer).
+        outputMsg=  '\n{:6} {}\n'.format('Name: ', self.name)
+        outputMsg+= '{:6} {}\n'.format('Test GUID: ', self.dfnGuid)
+        outputMsg+= '{:6} {}\n'.format('General generalComments: ', self.generalComments)
+        outputMsg+= '{:17} {}\n'.format('Number of Steps: ', str(self._numberOfSteps))
+        outputMsg+=  '{}\n'.format('Test Steps:')
+        for step in self._steps:
+            outputMsg += str(step)
+        outputMsg+=  '\n\n{}\n'.format('Entire Test Definition Configuration:')
+        for section in self.config:
+            outputMsg += '{}\n'.format(section)
+            for option in self.config[section]:
+                outputMsg += '{}{}{}{}\n'.format('  ', option, ':', self.config[section][option])
+        return(outputMsg)
+
 
     # this function will determine how many steps are contained in the
     # test definition. Pass a defaulted setion prefix.

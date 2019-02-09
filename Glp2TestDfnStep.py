@@ -36,6 +36,30 @@ must be a dictionary, or something convertable to an dictionary. Step data not s
             self._stepData = None
 
     def __repr__(self):
+        # TODO: Make output a dictionary or someting in line with the goal of __repr__
+        # __repr__ should have an unambiguous output and create
+        # a 'representation that should look like a valid Python
+        # Epression that could be used to recreate an object with
+        # the same value.'
+        outputMsg =  '{:19}{:<9}{:15}{:<36}'.format('\nStep Number: ', \
+                self.stepNum, 'Step GUID: ', self.stepGuid)
+        outputMsg += '{:19}{}'.format('\nStep Description: ', self.stepDescription)
+        outputMsg += '{:18}{:<9}{:15}{:<36}'.format('\nStep Method: ', \
+                self.stepMethod, 'Step Mode: ', self.stepMode)
+        outputMsg += '{:18}{:<9}{:15}{:<36}'.format('\nCurrent Range: ', \
+                self.currentRange, 'Current Limit: ', self.currentLimit)
+        outputMsg += '{:18}{:<9.3f}{:15}{:<.3f}'.format('\nTest Time: ', \
+                self.testTime, 'Ramp Time: ', self.rampTime)
+        outputMsg += '{:18}{:<9}{:15}{:<36}'.format('\nDelay Time: ', \
+                self.delayTime, 'Test Voltage: ', self.testVoltage)
+        outputMsg += '\n\nRaw Step Data:'
+        for key in self.stepData:
+            outputMsg += '\n' + key + ': ' + self.stepData[key]
+        return(outputMsg)
+
+    def __str__(self):
+        # The goal of __str__ is to create a string representation
+        # of the object that is readable to a user (not a programmer).
         outputMsg =  '{:19}{:<9}{:15}{:<36}'.format('\nStep Number: ', \
                 self.stepNum, 'Step GUID: ', self.stepGuid)
         outputMsg += '{:19}{}'.format('\nStep Description: ', self.stepDescription)
