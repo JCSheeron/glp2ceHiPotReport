@@ -64,22 +64,4 @@ expected to be a tuple or something that can be converted to a tuple.')
     return tests
 
 
-def ParseGraphString(graphString):
-    GRAPH_STRING_TOKEN = '|#GR#|'
-    # 1) Search for beginning of graph string token
-    # If beginning token is found, continue, else exit
-    #
-    # 2) Get substring contained between '<' and '>'. These
-    # are the axis definitions.  Each axis has 6 delimited
-    # with a '\', and the axes are separated from each other
-    # with a '|'.
-    # <axis 1 fields|axis 2 fields|...axis n fields>
-    # Make a list of axis stirngs
-    #
-    # 3) The rest of the string after the closing '>' of the
-    # axes definitions are the axis values. One value per axis,
-    # each value separated with a '|', and each set of axis values
-    # separated from the next set with a '\'
-    # Strip off the retmaining string as the data string.
-    pass
 
