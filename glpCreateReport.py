@@ -83,6 +83,7 @@ from bpsFile import listFiles
 from Glp2TestDfn import Glp2TestDfn
 from Glp2TestData import Glp2TestData
 from Glp2Functions import MakeTestList
+from Glp2GraphParse import Glp2GraphParse
 
 # **** argument parsing
 # define the arguments
@@ -321,8 +322,10 @@ for tidx, test in enumerate(tests):
             # match found. Create pair
             prt_tDfn.append((tidx, didx))
 
-#
-# TODO: Parse & Process the graph data
+# **** Parse & Process the graph data
+grphObject = Glp2GraphParse(tests[0].steps[0].graphData)
+print(grphObject)
+
 #
 # TODO: Create a graph (MatPlotLib)
 #

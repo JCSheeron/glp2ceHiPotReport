@@ -21,13 +21,17 @@
     # each value separated with a '|', and each set of axis values
     # separated from the next set with a '\'
     # Strip off the retmaining string as the data string.
-    pass
 
 class Glp2GraphParse(object):
     # class constants
     SOG_TOKEN = '|#GR#|'    # Denote Start of the graph
     SOAX_TOKEN = '<'        # Denote the start of axis definition(s)
     EOAX_TOKEN = '>'        # Denote the end of axis definition(s)
+    AXIS_TOKEN ='|'         # Delimits one axis definition from another
+    AXIS_FIELD_TOKEN = '\\' # Delimits axis definition fields
+    DATA_AXIS_TOKEN = '|'   # Delimits axis values within a data sample set
+    DATA_SAMPLE_TOKEN = '\\'# Delimits one sample set from the next is the data set
+    EOD_TOKEN = '}'         # End of data token
 
 
     # find the position of the beginning of the graph data (i.e. return the
@@ -36,22 +40,69 @@ class Glp2GraphParse(object):
     def _posSOG():
         return self._rawDataStr.find(SOG_TOKEN)
 
+    # Break out the axis definitions and return a list of lists. Each
+    # item in the list will be a list of field values for an axis definition.
+    # The fields (6 fields if all is well) of the axis defninition are delimited
+    # by the AXIS_FIELD_TOKEN.  The start and end of the axis definition
+    # section is delimited within the graph data by being between the SOAX and
+    # EOAX Tokens.  Within the axis defintion, one axis definition is delimited
+    # from another with the AXSI_TOKEN.
     def _getAxisDfns():
+        # make sure there is a start of graph data
+        posSog = self._rawDataStr.find(SOG_TOKEN)
         # get start and end of axis definition positions.
         posSoax = self._rawDataStr.find(SOAX_TOKEN)
         posEoax = self._rawDataStr.find(EOAX_TOKEN)
-        lenAx = 
-        # If beginning and end were found, and beginning is before end, and
-        # overall length is greater than the end position, the the positions 
-        # are believable.  Return the substring that defines the axes else
-        # return None.
-        if posSoax > -1 and posEoax > -1 and posSoax < posEoax and posEoax < len(self._rawDataStr):
-            # believable positions. Return the sub string
-            return self._rawDataStr[posSoax + 1:posEoax]
-        else:
+        # If the beginning of graph data was found, and the beginning and end
+        # of axis definitions were found, and beginning is before end, and
+        # overall length is greater than the end position, the the positions
+        # are believable.  Return None if this isn't the case.
+        if (posSog == -1 or posSog >= posSoax or posSoax == -1 or posEoax == -1 or
+                posSoax >= posEoax or posEoax >= len(self._rawDataStr)):
             return None
 
-    def
+        # good positions if we get here
+        # Split the axis definition string by the AXIS_TOKEN split out each
+        # definition
+        dfnStrings = sel._rawDataStr[posSoax:posEoax - 1].split(AXIS_TOKEN)
+        # go through each definition and separate out the fields
+        dfns = []
+        for dfn in dfnStrings:
+            dfns.extend(dfn.split(AXIS_FIELD_TOKEN))
+        #return a list of axis field lists
+        return dfns
+
+        # Break the data in to a list of sample sets. Each sample set is a list
+        # of values, one value per axis.  The sample set values are in the same
+        # order as the axis definitions.
+    def _getAxisData():
+        # make sure there is a start of graph data
+        posSog = self._rawDataStr.find(SOG_TOKEN)
+        # get the end of axis definition position. Data is next...
+        posEoax = self._rawDataStr.find(EOAX_TOKEN)
+        # get the end of the data position
+        posEod = self._rawDataStr.find(EOD_TOKEN)
+        # If the beginning of graph data was found, and the end
+        # of axis definitions was found, and the end of the date was found,
+        # and the beginning of the graph data is before the end of the axis
+        # definitions, and end of the axis definitions is before the end of
+        # the data, and the overall length is greater than the end of the
+        # data poition, then the positions are believable.
+        # Return None if this isn't the case.
+        if (posSog == -1 or posEoax == -1 or posEod == -1 or posSog >= posEoax or
+                posEoax >= posEod or posEod >= len(self._rawDataStr)):
+            return None
+
+        # good positions if we get here
+        # Split the data string by the DATA_SAMPLE_TOKEN to make a list of sample
+        # stirngs
+        sampleStrings = sel._rawDataStr[posEoax + 1:posEod].split(DATA_SAMPLE_TOKEN)
+        # go through each sample and separate out the values
+        samples = []
+        for sample in sampleStrings:
+            samnples.extend(sample.split(DATA_AXIS_TOKEN))
+        #return a list of sample lists
+        return samples
 
     def __init__(self, rawDataStr):
         # make sure you can convert the raw data to a string. If so, get it.
@@ -68,7 +119,7 @@ class Glp2GraphParse(object):
         # to recreate an object with the same value.'
         # The goal of __repr__ is to be unambiguous.
         # Implement __repr__ for any class you implement.
-        pass
+        return self._rawDataStr
 
     def __str__(self):
         # The goal of __str__ is to create a string representation
@@ -76,13 +127,15 @@ class Glp2GraphParse(object):
         # Implement __str__ if you think it would be useful to have a string
         # version which errs on the side of readability in favor of more
         # ambiguity
-        pass
+        outputMsg=  '{:20}\n{}\n'.format('Axis Definitions: ', self._getAxisDfns())
+        outputMsg+= '{:20}\n{}\n'.format('Data Definitions: ', self._getAxisData())
+        return outputMsg
 
-    # properties
-    @property
-    def prop_name(self):
-        return None
-
-    @prop_name.setter
-    def name(self, newName):
-        pass
+#    # properties
+#    @property
+#    def prop_name(self):
+#        return None
+#
+#    @prop_name.setter
+#    def name(self, newName):
+#        pass
