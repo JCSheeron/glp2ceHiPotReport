@@ -28,7 +28,7 @@ class Glp2TestDfn(object):
             # files *.TPR use a format that is like a *.INI config file.
             self._config = configparser.ConfigParser()
             self._config.read(fileName, fileEncoding)
-            self._numberOfSteps = self.GetNumOfSteps(constants.DFN_STEP_SECTION_PREFIX)
+            self._numberOfSteps = self._GetNumOfSteps(constants.DFN_STEP_SECTION_PREFIX)
             # If there are steps defined, process them and create populated
             # test definition step objects.
             # init list of steps to an empty list. It will say empty if there 
@@ -83,7 +83,7 @@ class Glp2TestDfn(object):
 
     # this function will determine how many steps are contained in the
     # test definition. Pass a defaulted setion prefix.
-    def GetNumOfSteps(self, sectionPrefix=constants.DFN_STEP_SECTION_PREFIX):
+    def _GetNumOfSteps(self, sectionPrefix=constants.DFN_STEP_SECTION_PREFIX):
         numOfSteps = 0
         stepNum = 1
         # construct section names and look for them until one isn't found

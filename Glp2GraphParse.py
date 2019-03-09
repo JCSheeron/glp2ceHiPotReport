@@ -14,13 +14,13 @@
     # with a '\', and the axes are separated from each other
     # with a '|'.
     # <axis 1 fields|axis 2 fields|...axis n fields>
-    # Make a list of axis stirngs
+    # Make a list of axis strings
     #
     # 3) The rest of the string after the closing '>' of the
     # axes definitions are the axis values. One value per axis,
     # each value separated with a '|', and each set of axis values
     # separated from the next set with a '\'
-    # Strip off the retmaining string as the data string.
+    # Strip off the remaining string as the data string.
 
 class Glp2GraphParse(object):
     # class constants
@@ -37,25 +37,25 @@ class Glp2GraphParse(object):
     # find the position of the beginning of the graph data (i.e. return the
     # position of the start of graph (SOG) string token. return value is zero based for the
     # beginning of the string, and -1 if not found.
-    def _posSOG():
-        return self._rawDataStr.find(SOG_TOKEN)
+    def _posSOG(self):
+        return self._rawDataStr.find(self.SOG_TOKEN)
 
     # Break out the axis definitions and return a list of lists. Each
     # item in the list will be a list of field values for an axis definition.
-    # The fields (6 fields if all is well) of the axis defninition are delimited
+    # The fields (6 fields if all is well) of the axis definition are delimited
     # by the AXIS_FIELD_TOKEN.  The start and end of the axis definition
     # section is delimited within the graph data by being between the SOAX and
-    # EOAX Tokens.  Within the axis defintion, one axis definition is delimited
-    # from another with the AXSI_TOKEN.
-    def _getAxisDfns():
+    # EOAX Tokens.  Within the axis definition, one axis definition is delimited
+    # from another with the AXIS_TOKEN.
+    def _getAxisDfns(self):
         # make sure there is a start of graph data
-        posSog = self._rawDataStr.find(SOG_TOKEN)
+        posSog = self._rawDataStr.find(self.SOG_TOKEN)
         # get start and end of axis definition positions.
-        posSoax = self._rawDataStr.find(SOAX_TOKEN)
-        posEoax = self._rawDataStr.find(EOAX_TOKEN)
+        posSoax = self._rawDataStr.find(self.SOAX_TOKEN)
+        posEoax = self._rawDataStr.find(self.EOAX_TOKEN)
         # If the beginning of graph data was found, and the beginning and end
         # of axis definitions were found, and beginning is before end, and
-        # overall length is greater than the end position, the the positions
+        # overall length is greater than the end position, then the positions
         # are believable.  Return None if this isn't the case.
         if (posSog == -1 or posSog >= posSoax or posSoax == -1 or posEoax == -1 or
                 posSoax >= posEoax or posEoax >= len(self._rawDataStr)):
@@ -64,30 +64,30 @@ class Glp2GraphParse(object):
         # good positions if we get here
         # Split the axis definition string by the AXIS_TOKEN split out each
         # definition
-        dfnStrings = sel._rawDataStr[posSoax:posEoax - 1].split(AXIS_TOKEN)
+        dfnStrings = self._rawDataStr[posSoax + 1:posEoax - 1].split(self.AXIS_TOKEN)
         # go through each definition and separate out the fields
         dfns = []
         for dfn in dfnStrings:
-            dfns.extend(dfn.split(AXIS_FIELD_TOKEN))
+            dfns.append(dfn.split(self.AXIS_FIELD_TOKEN))
         #return a list of axis field lists
         return dfns
 
         # Break the data in to a list of sample sets. Each sample set is a list
         # of values, one value per axis.  The sample set values are in the same
         # order as the axis definitions.
-    def _getAxisData():
+    def _getAxisData(self):
         # make sure there is a start of graph data
-        posSog = self._rawDataStr.find(SOG_TOKEN)
+        posSog = self._rawDataStr.find(self.SOG_TOKEN)
         # get the end of axis definition position. Data is next...
-        posEoax = self._rawDataStr.find(EOAX_TOKEN)
+        posEoax = self._rawDataStr.find(self.EOAX_TOKEN)
         # get the end of the data position
-        posEod = self._rawDataStr.find(EOD_TOKEN)
+        posEod = self._rawDataStr.find(self.EOD_TOKEN)
         # If the beginning of graph data was found, and the end
         # of axis definitions was found, and the end of the date was found,
         # and the beginning of the graph data is before the end of the axis
         # definitions, and end of the axis definitions is before the end of
         # the data, and the overall length is greater than the end of the
-        # data poition, then the positions are believable.
+        # data position, then the positions are believable.
         # Return None if this isn't the case.
         if (posSog == -1 or posEoax == -1 or posEod == -1 or posSog >= posEoax or
                 posEoax >= posEod or posEod >= len(self._rawDataStr)):
@@ -95,12 +95,12 @@ class Glp2GraphParse(object):
 
         # good positions if we get here
         # Split the data string by the DATA_SAMPLE_TOKEN to make a list of sample
-        # stirngs
-        sampleStrings = sel._rawDataStr[posEoax + 1:posEod].split(DATA_SAMPLE_TOKEN)
+        # strings
+        sampleStrings = self._rawDataStr[posEoax + 1:posEod].split(self.DATA_SAMPLE_TOKEN)
         # go through each sample and separate out the values
         samples = []
         for sample in sampleStrings:
-            samnples.extend(sample.split(DATA_AXIS_TOKEN))
+            samples.append(sample.split(self.DATA_AXIS_TOKEN))
         #return a list of sample lists
         return samples
 
@@ -109,7 +109,7 @@ class Glp2GraphParse(object):
         try:
             self._rawDataStr = str(rawDataStr)
         except ValueError as ve:
-            print('The raw data must be a string or convertable to a string.')
+            print('The raw data must be a string or convertible to a string.')
             print(ve)
             quit()
 

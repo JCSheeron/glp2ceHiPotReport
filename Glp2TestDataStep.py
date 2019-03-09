@@ -35,7 +35,8 @@
 #
 # imports
 #
-
+# TODO: Add operator field
+#
 class Glp2TestDataStep(object):
     def __init__(self, data=None, header=None, decimalSeparator = ',',
                  testStepGuidIdx=1, stepNumberIdx=2, deviceNumberIdx=31,
@@ -262,16 +263,12 @@ No step information captured.')
             return None
 
     @property
-    def graphData(self, step=1):
-        # steps start at 1
-        if self._rawData is not None and step >= 1 and step <= len(self._rawData):
-            # there is raw data and the step is within range (within the width of a row)
-            if self._graphDataIdx + 1 <= len(self._rawData[step - 1]):
-                # the index is within range
-                return self._rawData[step - 1][self._graphDataIdx]
-            else: # index out of range
-                return None
-        else: # no data or step out of range
+    def graphData(self):
+        # get the graph data from the raw data if it is present
+        if self._rawData is not None and self._graphDataIdx + 1 <= len(self._rawData):
+            return self._rawData[self._graphDataIdx]
+        else: # index out of range
+            print('graphData index OOR')
             return None
 
     @property

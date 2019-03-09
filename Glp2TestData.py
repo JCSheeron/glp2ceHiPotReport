@@ -222,7 +222,7 @@ No Data Captured.')
             return None
 
     @property
-    def steps(self):
+    def stepCount(self):
         return len(self._rawData)
 
     @property

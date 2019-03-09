@@ -322,8 +322,13 @@ for tidx, test in enumerate(tests):
             # match found. Create pair
             prt_tDfn.append((tidx, didx))
 
+print(prt_tDfn)
+
+#print('**** Test 0: ****')
+#print('**** Test 0 Step 0: ****')
+#print(tests[0]._steps[0].graphData)
 # **** Parse & Process the graph data
-grphObject = Glp2GraphParse(tests[0].steps[0].graphData)
+grphObject = Glp2GraphParse(tests[0]._steps[0].graphData)
 print(grphObject)
 
 #
