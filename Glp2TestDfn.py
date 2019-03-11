@@ -66,18 +66,17 @@ class Glp2TestDfn(object):
     def __str__(self):
         # The goal of __str__ is to create a string representation
         # of the object that is readable to a user (not a programmer).
-        outputMsg=  '\n{:6} {}\n'.format('Name: ', self.name)
-        outputMsg+= '{:6} {}\n'.format('Test GUID: ', self.dfnGuid)
-        outputMsg+= '{:6} {}\n'.format('General generalComments: ', self.generalComments)
-        outputMsg+= '{:17} {}\n'.format('Number of Steps: ', str(self._numberOfSteps))
-        outputMsg+=  '{}\n'.format('Test Steps:')
-        for step in self._steps:
-            outputMsg += str(step)
-        outputMsg+=  '\n\n{}\n'.format('Entire Test Definition Configuration:')
-        for section in self.config:
-            outputMsg += '{}\n'.format(section)
-            for option in self.config[section]:
-                outputMsg += '{}{}{}{}\n'.format('  ', option, ':', self.config[section][option])
+        outputMsg=  '\n{:19} {}\n'.format('Name: ', self.name)
+        outputMsg+= '{:19} {}\n'.format('Test GUID: ', self.dfnGuid)
+        outputMsg+= '{:19} {}\n'.format('General Comments: ', self.generalComments)
+        outputMsg+= '{:19} {}\n'.format('Name of Programmer: ', self.nameOfProgrammer)
+        outputMsg+= '{:19} {}\n'.format('Number of Steps: ', str(self._numberOfSteps))
+        outputMsg+=  '\n{}\n'.format('Test Steps:')
+        if self._numberOfSteps > 0:
+            for step in self._steps:
+                outputMsg += str(step)
+        else:
+            outputMsg+= '  No Steps Defined!'
         return(outputMsg)
 
 
@@ -117,6 +116,13 @@ class Glp2TestDfn(object):
         if self._config.has_option(constants.DFN_GENERAL_SECTION,
                 constants.DFN_GENSEC_COMMENTS_OPTNAME):
             return(self._config[constants.DFN_GENERAL_SECTION][constants.DFN_GENSEC_COMMENTS_OPTNAME])
+        else:
+            return None
+
+    @property
+    def nameOfProgrammer(self):
+        if self._config.has_option(constants.DFN_GENERAL_SECTION, constants.DFN_GENSEC_NAME_OF_PROG_OPTNAME):
+            return(self._config[constants.DFN_GENERAL_SECTION][constants.DFN_GENSEC_NAME_OF_PROG_OPTNAME])
         else:
             return None
 

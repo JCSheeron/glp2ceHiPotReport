@@ -41,17 +41,17 @@ must be a dictionary, or something convertable to an dictionary. Step data not s
         # a 'representation that should look like a valid Python
         # Epression that could be used to recreate an object with
         # the same value.'
-        outputMsg =  '{:19}{:<9}{:15}{:<36}'.format('\nStep Number: ', \
+        outputMsg =  '\n{:19}{:<9}{:15}{:<36}'.format('Step Number: ', \
                 self.stepNum, 'Step GUID: ', self.stepGuid)
-        outputMsg += '{:19}{}'.format('\nStep Description: ', self.stepDescription)
-        outputMsg += '{:18}{:<9}{:15}{:<36}'.format('\nStep Method: ', \
+        outputMsg += '\n{:19}{}'.format('Step Description: ', self.stepDescription)
+        outputMsg += '\n{:18}{:<9}{:15}{:<36}'.format('Step Method: ', \
                 self.stepMethod, 'Step Mode: ', self.stepMode)
-        outputMsg += '{:18}{:<9}{:15}{:<36}'.format('\nCurrent Range: ', \
+        outputMsg += '\n{:18}{:<9}{:15}{:<36}'.format('Current Range: ', \
                 self.currentRange, 'Current Limit: ', self.currentLimit)
-        outputMsg += '{:18}{:<9.3f}{:15}{:<.3f}'.format('\nTest Time: ', \
+        outputMsg += '\n{:18}{:<9.3f}{:15}{:<.3f}'.format('Test Time: ', \
                 self.testTime, 'Ramp Time: ', self.rampTime)
-        outputMsg += '{:18}{:<9}{:15}{:<36}'.format('\nDelay Time: ', \
-                self.delayTime, 'Test Voltage: ', self.testVoltage)
+        outputMsg += '\n{:18}{:<9}{:15}{:<36}\n'.format('Delay Time: ', \
+                self.delayTime, 'Test Voltage: ', self.testVoltage,)
         outputMsg += '\n\nRaw Step Data:'
         for key in self.stepData:
             outputMsg += '\n' + key + ': ' + self.stepData[key]
@@ -60,22 +60,18 @@ must be a dictionary, or something convertable to an dictionary. Step data not s
     def __str__(self):
         # The goal of __str__ is to create a string representation
         # of the object that is readable to a user (not a programmer).
-        outputMsg =  '{:19}{:<9}{:15}{:<36}'.format('\nStep Number: ', \
+        outputMsg =  '{:18}{:<9}{:15}{:<36}'.format('Step Number: ', \
                 self.stepNum, 'Step GUID: ', self.stepGuid)
-        outputMsg += '{:19}{}'.format('\nStep Description: ', self.stepDescription)
-        outputMsg += '{:18}{:<9}{:15}{:<36}'.format('\nStep Method: ', \
+        outputMsg += '\n{:18}{}'.format('Step Description: ', self.stepDescription)
+        outputMsg += '\n{:18}{:<9}{:15}{:<36}'.format('Step Method: ', \
                 self.stepMethod, 'Step Mode: ', self.stepMode)
-        outputMsg += '{:18}{:<9}{:15}{:<36}'.format('\nCurrent Range: ', \
+        outputMsg += '\n{:18}{:<9}{:15}{:<36}'.format('Current Range: ', \
                 self.currentRange, 'Current Limit: ', self.currentLimit)
-        outputMsg += '{:18}{:<9.3f}{:15}{:<.3f}'.format('\nTest Time: ', \
+        outputMsg += '\n{:18}{:<9.3f}{:15}{:<.3f}'.format('Test Time: ', \
                 self.testTime, 'Ramp Time: ', self.rampTime)
-        outputMsg += '{:18}{:<9}{:15}{:<36}'.format('\nDelay Time: ', \
-                self.delayTime, 'Test Voltage: ', self.testVoltage)
-        outputMsg += '\n\nRaw Step Data:'
-        for key in self.stepData:
-            outputMsg += '\n' + key + ': ' + self.stepData[key]
+        outputMsg += '\n{:18}{:<9}{:15}{:<36}\n\n'.format('Delay Time: ', \
+                self.delayTime, 'Test Voltage: ', self.testVoltage,)
         return(outputMsg)
-
     # properties
     @property
     def stepNum(self):

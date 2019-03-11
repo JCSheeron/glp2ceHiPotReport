@@ -49,7 +49,7 @@
 from datetime import datetime, time
 
 # os file related
-# join combines path stirngs in a smart way (i.e. will insert '/' if missing,
+# join combines path strings in a smart way (i.e. will insert '/' if missing,
 # or remove a '/' if a join creates a repeat.
 from os.path import join
 
@@ -66,7 +66,7 @@ import csv
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt # for plotting
-import matplotlib.font_manager as fontmgr # for managing fonts
+#import matplotlib.font_manager as fontmgr # for managing fonts
 
 # pdf creation
 from fpdf import FPDF
@@ -77,9 +77,10 @@ from PyPDF2 import PdfFileMerger, PdfFileReader
 # Note: May need PYTHONPATH (set in ~/.profile?) to be set depending
 # on the location of the imported files
 from bpsFile import listFiles
+from bpsCPdf import cPdf
 
-# sepcialized libraties unlikely to be used elsewhere. These should
-# travle with this file.
+# specialized libraries unlikely to be used elsewhere. These should
+# travel with this file.
 from Glp2TestDfn import Glp2TestDfn
 from Glp2TestData import Glp2TestData
 from Glp2Functions import MakeTestList
@@ -87,7 +88,7 @@ from Glp2GraphParse import Glp2GraphParse
 
 # **** argument parsing
 # define the arguments
-# create an epilog string to further describe the input file
+# create an epilogue string to further describe the input file
 # TODO: Complete the below description.
 eplStr="""Python program to create a PDF report from a data export file from
 a Schleich GLP2-ce Hi Pot Modular Tester."""
@@ -114,7 +115,7 @@ not known when the configuration file is created.')
 parser.add_argument('-c', '--configFile', default='config.ini', metavar='', \
                    help='Config file. Default is config.ini. A list of files \
 may be specified ([\'file1.ini\',\'file2.ini\',...]) if the configuration is \
-spread across multiple files. The resuling configuration will be a union of the \
+spread across multiple files. The resulting configuration will be a union of the \
 information, so if keys are repeated, the key will have the value it had in the \
 last file read.')
 parser.add_argument('-ce', '--configEncoding', default='UTF-8', metavar='', \
@@ -122,7 +123,7 @@ parser.add_argument('-ce', '--configEncoding', default='UTF-8', metavar='', \
 parser.add_argument('-t', '--testDfnFile', default='', metavar='', \
                    help='Test definition file (*.TPR). If specified, this and only \
 this test definition is used. If not specified, all *.TPR files in the test_dfn_dir \
-will be considered.  A proper data file will include a test definiton id. In \
+will be considered.  A proper data file will include a test definition id. In \
 either case (specified or not), the test id must match test id in the data file. \
 In the non-specified case, any files present will be searched until the test id \
 in the data is found in one of the test definition files.')
@@ -213,7 +214,7 @@ but was not found. Exiting.')
     quit()
 elif args.testDfnFile != '' and args.testDfnFile is not None and args.testDfnFile in testDfnNames:
     # Test dfn file specified, and found. Print message and load into a 1 element list
-    print('\nSepecified test definition file \'' + args.testDfnFile + '\' was found and is being used.')
+    print('\nSpecified test definition file \'' + args.testDfnFile + '\' was found and is being used.')
     try:
         testDfns.append(Glp2TestDfn(args.testDfnFile, join(testDfnPath, args.testDfnFile),
                                     args.testDfnEncoding))
@@ -227,7 +228,7 @@ elif args.testDfnFile != '' and args.testDfnFile is not None and args.testDfnFil
 elif args.testDfnFile == '' or args.testDfnFile is None:
     # Test dfn file not specified. Load all the definitions.
     print('\nThere was no test definition file specified.  The test definition id in the \
-data will be used to try and determne the correct test definition file to use.')
+data will be used to try and determine the correct test definition file to use.')
     # For each definition file name, create and append a Glp2TestDfn object.
     # Exclude files starting with '.', or files that don't end with '*.tpr' (case insensitive)
     # The no starting dot filters out hidden or locked files, and the .tpr
@@ -263,7 +264,7 @@ but was not found. Exiting.')
     quit()
 elif args.dataFile != '' and args.dataFile is not None and args.dataFile in testDataNames:
     # Test data file specified, and found. Print message and load into a 1 element list
-    print('\nSepecified test data file \'' + args.dataFile + '\' was found and is being used.')
+    print('\nSpecified test data file \'' + args.dataFile + '\' was found and is being used.')
     # **** read the csv file into a data frame.  The first row is treated as the header
     try:
         with open(join(testDataPath, args.dataFile), mode='r', encoding=args.dataFileEncoding) as dataCsvFile:
@@ -308,7 +309,7 @@ elif args.dataFile == '' or args.dataFile is None:
 tests = tuple(tests)
 
 # **** Link the test data with the test definition
-# At this point we have the test defintions loaded in the testDfns(...) tuple,
+# At this point we have the test definitions loaded in the testDfns(...) tuple,
 # and the test data loaded in the tests(...) tuple.
 # Use the GUIDs to link the two. Loop through the test data tuple, get the
 # test dfn guid, and then match this guid with a test definition file.
@@ -322,15 +323,60 @@ for tidx, test in enumerate(tests):
             # match found. Create pair
             prt_tDfn.append((tidx, didx))
 
-print(prt_tDfn)
+print('(Test, Test Dfn) Pairs:', prt_tDfn)
+for didx, dfn in enumerate(testDfns):
+    print('testDfn Idx:', didx)
+
 
 #print('**** Test 0: ****')
 #print('**** Test 0 Step 0: ****')
 #print(tests[0]._steps[0].graphData)
 # **** Parse & Process the graph data
 grphObject = Glp2GraphParse(tests[0]._steps[0].graphData)
-print(grphObject)
+# print(grphObject)A
+#
+# **** Create the Test Definition Output Message
+#
+testDfnMsg = '*' * 70 + '\n'
+testDfnMsg += 'Traveler Number _____________________________________________________\n\n'
+testDfnMsg += 'Traveler Operation(s) _______________  Traveler Page(s) _____________\n\n'
+#testDfnMsg += str(testDfns(prt_tDfn[0][1]))
+print(str(testDfns[prt_tDfn[0][1]]))
 
+#        testDfnMsg += 'Program Name: ' + calNotes + '\n\n'
+#        testDfnMsg += 'NOTE: ' + calNotes + '\n\n'
+#        testDfnMsg +='{:37} {:9.2f} {:9.2f}\n' \
+#                .format('Min and Max PLC Nominal Counts: ', minMaxCounts[0], \
+#                                                    minMaxCounts[1])
+#        testDfnMsg += '{:37} {:9.2f} {:9.2f} \n\n' \
+#                .format('Min and Max Nominal EU (' + EuUnitsLabel + '): ', \
+#                        minMaxEu[0], minMaxEu[1])
+#        # Measured counts vs Measured EU table
+#        testDfnMsg +='{:16}  {:30}\n'.format('Measured Counts', \
+#                                    'Measured EU (' + EuUnitsLabel + ')')
+#        testDfnMsg +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
+
+# Instantiate the extended pdf class and get on with making the pdf
+fnameData= '__zzqq__tempPdf_testDfn__zzqq__.pdf' # not likely to exist and be something else
+# Units are in points (pt)
+pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter', headerText='Test Definition')
+# define the nb alias for total page numbers used in footer
+pdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
+pdf.set_margins(54, 72, 54) # left, top, right margins (in points)
+
+# Set the font for the main content
+# use the bold proportional font
+if pdf.fontNames[0] != pdf.defaultFontNames[0]:
+    # non-default
+    pdf.set_font("regularMono", '', 10)
+else:
+    # default
+    pdf.set_font(pdf.defaultFontNames[0], '', 10)
+
+# add the content put into outputMsg above
+pdf.add_page() # use ctor params
+pdf.multi_cell(w=0, h=13, txt=testDfnMsg, border=0, align='L', fill=False )
+#pdf.output(name = fnameData, dest='F')
 #
 # TODO: Create a graph (MatPlotLib)
 #

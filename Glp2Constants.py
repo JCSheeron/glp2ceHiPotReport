@@ -8,6 +8,7 @@
 # Section names
 DFN_GENERAL_SECTION = 'General Data'
 DFN_GENSEC_COMMENTS_OPTNAME = 'Comments'
+DFN_GENSEC_NAME_OF_PROG_OPTNAME = 'Name of programmer'
 # def id
 DFN_GENSEC_GUID_OPTNAME = 'GUID'
 DFN_STEP_SECTION_PREFIX = 'TestStep'
