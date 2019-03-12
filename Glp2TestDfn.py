@@ -26,12 +26,13 @@ class Glp2TestDfn(object):
             # Make a config object, and read in the config file name.
             # The fileName should be a test definition, and the definition
             # files *.TPR use a format that is like a *.INI config file.
+            self._fileName = fileName
             self._config = configparser.ConfigParser()
             self._config.read(fileName, fileEncoding)
             self._numberOfSteps = self._GetNumOfSteps(constants.DFN_STEP_SECTION_PREFIX)
             # If there are steps defined, process them and create populated
             # test definition step objects.
-            # init list of steps to an empty list. It will say empty if there 
+            # init list of steps to an empty list. It will say empty if there
             # is not at least one step.
             self._steps=[]
             if self._numberOfSteps > 0: # there is at least one step
@@ -40,7 +41,7 @@ class Glp2TestDfn(object):
                 for step in range(1, self._numberOfSteps + 1):
                     sectionName = constants.DFN_STEP_SECTION_PREFIX + str(step)
                     self._steps.append(Glp2TestDfnStep(step, self._config.items(sectionName)))
-            else: # there are not steps
+            else: # there are no steps
                 pass    # nothing to do!
 
     def __repr__(self):
@@ -94,8 +95,11 @@ class Glp2TestDfn(object):
                 stepNum += 1
             else:
                 return numOfSteps
-    #def GetStepValues(self, sectionPrefix='TestS'
     # properties
+    @property
+    def fileName(self):
+        return self._fileName
+
     @property
     def name(self):
         return self._name

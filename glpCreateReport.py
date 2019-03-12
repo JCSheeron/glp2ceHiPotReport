@@ -187,8 +187,8 @@ else:
     testDfnPath = join(config['Paths']['common_dir'], config['Paths']['test_dfn_dir'])
 
 if args.verbose:
-    print('\nTest Data Path: ' + testDataPath)
-    print('Test Definition Path: ' + testDfnPath)
+    print('\n{:22}{}'.format('Test Data Path: ',testDataPath))
+    print('{:22}{}'.format('Test Definition Path: ', testDfnPath))
 
 # get the decimal separator from the file, or use the default of a ',' (the euro way)
 if config.has_option('TestData', 'decimalSeparator'):
@@ -323,9 +323,15 @@ for tidx, test in enumerate(tests):
             # match found. Create pair
             prt_tDfn.append((tidx, didx))
 
+print('(Test, Test Dfn) Number of Pairs:', len(prt_tDfn))
 print('(Test, Test Dfn) Pairs:', prt_tDfn)
+
 for didx, dfn in enumerate(testDfns):
-    print('testDfn Idx:', didx)
+    print(str(didx) + ': Dfn File Name: ' + dfn.fileName)
+
+for tidx, test in enumerate(tests):
+    print(str(tidx) + ': Test Data File Name: ' + test.fileName)
+    print(str(tidx) + ': Test Data Dfn Name: ' + test.testProgramName)
 
 
 #print('**** Test 0: ****')
@@ -341,7 +347,7 @@ testDfnMsg = '*' * 70 + '\n'
 testDfnMsg += 'Traveler Number _____________________________________________________\n\n'
 testDfnMsg += 'Traveler Operation(s) _______________  Traveler Page(s) _____________\n\n'
 #testDfnMsg += str(testDfns(prt_tDfn[0][1]))
-print(str(testDfns[prt_tDfn[0][1]]))
+#print(str(testDfns[prt_tDfn[0][1]]))
 
 #        testDfnMsg += 'Program Name: ' + calNotes + '\n\n'
 #        testDfnMsg += 'NOTE: ' + calNotes + '\n\n'
