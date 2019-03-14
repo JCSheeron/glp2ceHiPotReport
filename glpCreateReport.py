@@ -73,6 +73,9 @@ from fpdf import FPDF
 # pdf manipulation
 from PyPDF2 import PdfFileMerger, PdfFileReader
 
+# for default dictionary
+from collections import defaultdict
+
 # user libraries
 # Note: May need PYTHONPATH (set in ~/.profile?) to be set depending
 # on the location of the imported files
@@ -186,9 +189,11 @@ else:
     testDataPath = join(config['Paths']['common_dir'], config['Paths']['data_dir'])
     testDfnPath = join(config['Paths']['common_dir'], config['Paths']['test_dfn_dir'])
 
+pathMsg  = '\n{:22}{}'.format('Test Data Path: ',testDataPath)
+pathMsg += '\n{:22}{}'.format('Test Definition Path: ', testDfnPath)
+
 if args.verbose:
-    print('\n{:22}{}'.format('Test Data Path: ',testDataPath))
-    print('{:22}{}'.format('Test Definition Path: ', testDfnPath))
+    print(pathMsg)
 
 # get the decimal separator from the file, or use the default of a ',' (the euro way)
 if config.has_option('TestData', 'decimalSeparator'):
@@ -213,8 +218,10 @@ if args.testDfnFile != '' and args.testDfnFile is not None and not args.testDfnF
 but was not found. Exiting.')
     quit()
 elif args.testDfnFile != '' and args.testDfnFile is not None and args.testDfnFile in testDfnNames:
-    # Test dfn file specified, and found. Print message and load into a 1 element list
-    print('\nSpecified test definition file \'' + args.testDfnFile + '\' was found and is being used.')
+    # Test dfn file specified, and found. Print message and load into a 1 element list. Save the
+    # message for use in the PDF output (later).
+    testDfnMsg = '\nSpecified test definition file \'' + args.testDfnFile + '\' was found and is being used.'
+    print(testDfnMsg)
     try:
         testDfns.append(Glp2TestDfn(args.testDfnFile, join(testDfnPath, args.testDfnFile),
                                     args.testDfnEncoding))
@@ -226,9 +233,12 @@ elif args.testDfnFile != '' and args.testDfnFile is not None and args.testDfnFil
         print(ue)
         quit()
 elif args.testDfnFile == '' or args.testDfnFile is None:
-    # Test dfn file not specified. Load all the definitions.
-    print('\nThere was no test definition file specified.  The test definition id in the \
-data will be used to try and determine the correct test definition file to use.')
+    # Test dfn file not specified. Print message and load all the definitions into a list. Save the
+    # message for use in the PDF output (later).
+    testDfnMsg = '\nThere was no test definition file specified.  The test definition id in the \
+data will be used to try and determine the correct test definition file to use.'
+    print(testDfnMsg)
+
     # For each definition file name, create and append a Glp2TestDfn object.
     # Exclude files starting with '.', or files that don't end with '*.tpr' (case insensitive)
     # The no starting dot filters out hidden or locked files, and the .tpr
@@ -244,6 +254,10 @@ data will be used to try and determine the correct test definition file to use.'
     # if we get here, we should have a list of test definitions.
     # convert to a tuple to prevent change
     testDfns = tuple(testDfns)
+
+# add more info to the test definition string used for the pdf.
+testDfnMsg += '\nThe following test definition files were found:'
+testDfnMsg += '\n' + str(testDfnNames)
 
 # at this point, testDfns is a tuple containing the test definitions to consider
 
@@ -263,8 +277,10 @@ if args.dataFile != '' and args.dataFile is not None and not args.dataFile in te
 but was not found. Exiting.')
     quit()
 elif args.dataFile != '' and args.dataFile is not None and args.dataFile in testDataNames:
-    # Test data file specified, and found. Print message and load into a 1 element list
-    print('\nSpecified test data file \'' + args.dataFile + '\' was found and is being used.')
+    # Test data file specified, and found. Print message and load into a 1 element list. Save
+    # the message for use in the pdf (later).
+    testDataMsg = '\nSpecified test data file \'' + args.dataFile + '\' was found and is being used.'
+    print(testDataMsg)
     # **** read the csv file into a data frame.  The first row is treated as the header
     try:
         with open(join(testDataPath, args.dataFile), mode='r', encoding=args.dataFileEncoding) as dataCsvFile:
@@ -279,9 +295,12 @@ elif args.dataFile != '' and args.dataFile is not None and args.dataFile in test
         quit()
 
 elif args.dataFile == '' or args.dataFile is None:
-    # Test data file not specified. Load all those found.
-    tests = []
-    print('\nThere was no test data file specified.  All data files found will be processed.')
+    # Test data file not specified. Load all those found.  Save message for pdf use (later).
+    testDataMsg = '\nThere was no test data file specified.  All data files found will be \
+processed. File names starting with a \'.\', or files that don\'t end with \'*.csv\' will \
+be ignored. This is to filter out hidden or locked files, or other file types.'
+    print(testDataMsg)
+    tests = [] # this will be a list of fount test data objects.
     for fileName in testDataNames:
         # For each data file name, make a list of Glp2TestData objects
         # Exclude files starting with '.', or files that don't end with '*.csv'
@@ -308,6 +327,10 @@ elif args.dataFile == '' or args.dataFile is None:
 # Convert it to a tuple to prevent bugs from changing it.
 tests = tuple(tests)
 
+# add more info to the test data string used for the pdf.
+testDataMsg += '\nThe following data files were found:'
+testDataMsg += '\n' + str(testDataNames)
+
 # **** Link the test data with the test definition
 # At this point we have the test definitions loaded in the testDfns(...) tuple,
 # and the test data loaded in the tests(...) tuple.
@@ -315,23 +338,62 @@ tests = tuple(tests)
 # test dfn guid, and then match this guid with a test definition file.
 # Pair the two up, and process them.
 #
-# Make a tuple of (test index, test definition index) matching pairs
+# Make a tuple of (test index, test definition index) matching pairs (prt_tDfn)
 prt_tDfn=[]
+# Also keep track of test data without a test definition, and for test
+# definitions for which there is no data. (tDfnMatch and dfnTMatch)
+# Init a list where the index position represents a test or definition index position.
+# After the loop, any False values are indexes without matches
+tDfnMatch=[False] * len(tests) # list of test data <-> test definition matches by position
+dfnTMatch=[False] * len(testDfns) # list of test definition <-> test data matches by position
+# Lastly, for informational (display) purposes, make a list of test definitions used
+# in each data file -- this will be a dictionary of sets with the data file
+# name being the dictionary key (fnVsDfn). A set is used so duplicates are automatically eliminated.
+# A duplicate, for example, would exist whenever a data file contains several test runs using the
+# same test definition.
+fnVsDfn=defaultdict(set)
 for tidx, test in enumerate(tests):
+    # associate tests with definitions and keep track of orphaned test data and definitions.
     for didx, dfn in enumerate(testDfns):
         if test.testProgramGuid == dfn.dfnGuid:
-            # match found. Create pair
+            # match found. Create pair and set the flags.
             prt_tDfn.append((tidx, didx))
+            tDfnMatch[tidx] = True
+            dfnTMatch[didx] = True
+    # populate the file name dictionary
+    fnVsDfn[test.fileName].add(test.testProgramName)
 
-print('(Test, Test Dfn) Number of Pairs:', len(prt_tDfn))
-print('(Test, Test Dfn) Pairs:', prt_tDfn)
+# **** Create a string used for the pdf output about test data files and
+# test definitions.
+dataDfnAssocMsg = '\nEach data file may contain test data for multiple tests. Each \
+test is associated with a particular test definition. For the data files processed \
+(see above), there is test data for ' + str(len(tests)) + ' test'
+# account for plural tests
+if len(tests) > 1:
+    dataDfnAssocMsg += 's.'
+else:
+    dataDfnAssocMsg += '.'
 
-for didx, dfn in enumerate(testDfns):
-    print(str(didx) + ': Dfn File Name: ' + dfn.fileName)
-
-for tidx, test in enumerate(tests):
-    print(str(tidx) + ': Test Data File Name: ' + test.fileName)
-    print(str(tidx) + ': Test Data Dfn Name: ' + test.testProgramName)
+dataDfnAssocMsg += '\nIn the test data, the following associations were found \
+between data file names and test definitions:'
+print(dataDfnAssocMsg)
+print(fnVsDfn)
+#
+#for didx, dfn in enumerate(testDfns):
+#    print(str(didx) + ': Dfn File Name: ' + dfn.fileName)
+#
+#defNoT = [didx for didx, val in enumerate(dfnTMatch) if not val]
+#print('Test definitions without any test data.')
+#print(defNoT)
+#
+#tNoDef = [tidx for tidx, val in enumerate(tDfnMatch) if not val]
+#print('Test data without any test definition.')
+#print(tNoDef)
+#
+#for tidx, test in enumerate(tests):
+#    print(str(tidx) + ': Test Data File Name: ' + test.fileName)
+#    print(str(tidx) + ': Test Data Dfn Name: ' + test.testProgramName)
+#
 
 
 #print('**** Test 0: ****')
