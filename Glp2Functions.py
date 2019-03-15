@@ -8,13 +8,14 @@
 # These functions are defined here to help keep the main code 'cleaner'.
 #
 # imports
+from ordered_set import OrderedSet # test ids
 from Glp2TestData import Glp2TestData
 
 # Create a list of test data objects from a test data file.
 # The file may contain data for more than one test.
 # It is expected this data will be a list of lists:  Each test step will be a
 # list of values, and each test will represented as a list of rows. Each row
-# has a test GUID. This GUID is unique for each test, so all the rows (steps) 
+# has a test GUID. This GUID is unique for each test, so all the rows (steps)
 # with a particular id will be contained in a single test data object.
 # Return a list of test data objects (Glp2TestData objects), with each object
 # having a unique test GUID.
@@ -24,7 +25,7 @@ def MakeTestList(fileName, dataSet, decimalSeparator):
     # The file data set must be a tuple, or something like a tuple.
     # A tuple is used to guard against bugs changing the data
     # Assume the first row is the header row.
-    # The decimalSeparator is used to tell the test object if a decimal point 
+    # The decimalSeparator is used to tell the test object if a decimal point
     # or comma is used as a decimal separator.
     try:
         fileDataSet = tuple(dataSet)
@@ -37,7 +38,7 @@ expected to be a tuple or something that can be converted to a tuple.')
     # If we get here, we have a tuple of the passed in file data set.
     # fileDataSet may be one or more sets of test data (multiple tests saved in one file)
     # each test may be (usually is) more than one step
-    testIds=set()   # holding spot for set of unique ids
+    testIds=OrderedSet()   # holding spot for set of unique ids. Use an ordered set to derrive testInstanceId
     test=[]         # holding spot for the rows corresponding to one test id
     tests=[]        # holding spot for test data objects created from the file data set.
     # Make a list of tests (tests[]),  but seperate each test by Test GUID
@@ -59,8 +60,12 @@ expected to be a tuple or something that can be converted to a tuple.')
         # Create a test object from it, and append it to a list of tests.
         # test[] contains the data, and the first row of the file data set
         # is the header info.
-        tests.append(Glp2TestData(str(fileName), test, fileDataSet[0], decimalSeparator))
-    # now tests[] has a Glp2TestData object for each test contained in the file
+        tests.append(Glp2TestData(fileName=str(fileName),
+                    data=test,
+                    header=fileDataSet[0],
+                    testInstanceId=testIds.index(id),
+                    decimalSeparator=decimalSeparator))
+    # tests[] has a Glp2TestData object for each test contained in the file
     return tests
 
 

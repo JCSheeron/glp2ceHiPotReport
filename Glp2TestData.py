@@ -20,7 +20,12 @@
 #
 # This object uses a tuple to store the header, and tuple to store the test data.
 #
-# The index passed to the constructor are defaulted to the correct zero based column
+# The testInstance value that is passed to the constructor is intended to store
+# which this object is associated with given a source data file that contains a
+# number of tests.  It is up to the object creating this test data object to pass
+# something meaningful.
+#
+# The indexes passed to the constructor are defaulted to the correct zero based column
 # numbers. Paramters are used so the values can be changed if needed.
 #
 # Since many of the values in the data are systemic, they are repeated for all the
@@ -35,14 +40,15 @@
 from Glp2TestDataStep import Glp2TestDataStep
 
 class Glp2TestData(object):
-    def __init__(self, fileName=None, data=None, header=None, decimalSeparator=',',
+    def __init__(self, fileName=None, data=None, header=None, testInstanceId=None,
+                 decimalSeparator=',',
                  testGuidIdx=0, testProgramNameIdx=25, testProgramGuidIdx=49,
                  deviceNumberIdx=31, testStepGuidIdx=1, stepNumberIdx=2,
                  nomVoltIdx=6, nomVoltUnitIdx=7, actVoltIdx=8, actVoltUnitIdx=9,
                  currentLimIdx=10, currentLimUnitIdx=11, actCurrIdx=12,
                  actCurrUnitIdx=13, timestampIdx=30, graphDataIdx=76):
         # The data expected is a tuple, list, or something convertable to a
-        # tuple that has an entire row of data from a test data file.  The
+        # tuple that has an entire row of data from a test data file.The
         # indexes are the normal column counts, starting at zero.
         #
         # These parameters are just passed through to the Glp2TestDataStep ctor:
@@ -77,6 +83,10 @@ or something convertable to a tuple. This generally means it must be something \
 iteratable. Setting the header to None.')
                 print(ve)
                 self._dataHeader = None
+
+        # capture the passed in testInstanceId
+        self._testInstanceId = testInstanceId
+
         # set up the data
         if data is not None: # data provided
             # make sure the data is convertable to a tuple. If not, report an
@@ -224,6 +234,10 @@ No Data Captured.')
     @property
     def stepCount(self):
         return len(self._rawData)
+
+    @property
+    def testInstanceId(self):
+        return (self._testInstanceId)
 
     @property
     def header(self):

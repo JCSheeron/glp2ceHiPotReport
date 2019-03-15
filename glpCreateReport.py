@@ -44,7 +44,6 @@
 # TODO: What else is specified?
 #
 # imports
-#
 # date and time stuff
 from datetime import datetime, time
 
@@ -81,11 +80,14 @@ from collections import defaultdict
 # on the location of the imported files
 from bpsFile import listFiles
 from bpsCPdf import cPdf
+from bpsPrettyPrint import listPrettyPrint3Col
 
 # specialized libraries unlikely to be used elsewhere. These should
 # travel with this file.
 from Glp2TestDfn import Glp2TestDfn
 from Glp2TestData import Glp2TestData
+# NOTE: The helper function MakeTestList in GlpFunctions requires ordered-set
+# which normally needs to be installed.
 from Glp2Functions import MakeTestList
 from Glp2GraphParse import Glp2GraphParse
 
@@ -208,7 +210,7 @@ testDfns = [] # definition holding spot
 
 if args.verbose:
     print('\nTest Definitions found:')
-    print(testDfnNames)
+    listPrettyPrint3Col(testDfnNames)
 
 # If a test definition file was specified, see if it was found. If not, error out.
 # If no test definition file was specified, load them all, and look for the correct id later
@@ -267,7 +269,7 @@ testDataNames = listFiles(testDataPath)
 
 if args.verbose:
     print('\nTest data files found:')
-    print(testDataNames)
+    listPrettyPrint3Col(testDataNames)
 
 # If a test data file was specified, see if it was found. If not, error out.
 # If no test data file was specified, load them all, so they can all be processed.
@@ -300,7 +302,7 @@ elif args.dataFile == '' or args.dataFile is None:
 processed. File names starting with a \'.\', or files that don\'t end with \'*.csv\' will \
 be ignored. This is to filter out hidden or locked files, or other file types.'
     print(testDataMsg)
-    tests = [] # this will be a list of fount test data objects.
+    tests = [] # this will be a list of found test data objects.
     for fileName in testDataNames:
         # For each data file name, make a list of Glp2TestData objects
         # Exclude files starting with '.', or files that don't end with '*.csv'
@@ -374,77 +376,137 @@ if len(tests) > 1:
 else:
     dataDfnAssocMsg += '.'
 
-dataDfnAssocMsg += '\nIn the test data, the following associations were found \
+dataDfnAssocMsg += '\n\nIn the test data, the following associations were found \
 between data file names and test definitions:'
-print(dataDfnAssocMsg)
-print(fnVsDfn)
-#
-#for didx, dfn in enumerate(testDfns):
-#    print(str(didx) + ': Dfn File Name: ' + dfn.fileName)
-#
-#defNoT = [didx for didx, val in enumerate(dfnTMatch) if not val]
-#print('Test definitions without any test data.')
-#print(defNoT)
-#
-#tNoDef = [tidx for tidx, val in enumerate(tDfnMatch) if not val]
-#print('Test data without any test definition.')
-#print(tNoDef)
-#
-#for tidx, test in enumerate(tests):
-#    print(str(tidx) + ': Test Data File Name: ' + test.fileName)
-#    print(str(tidx) + ': Test Data Dfn Name: ' + test.testProgramName)
-#
+# print the file vs dfn associations
+for fn, dfns in fnVsDfn.items():
+    dataDfnAssocMsg += '\n\n' + fn
+    if dfns:
+        # if there are definitions associated with the file
+        for dfn in dfns:
+            dataDfnAssocMsg += '\n    ' + dfn
+    else:
+        # no definitions associated with the file
+        # I don't think it is possible to get here, but just for safety
+        dataDfnAssocMsg += '    (no definitions associated with this file)'
 
+# Message if there is any test data without a found definition
+tNoDef = [tidx for tidx, val in enumerate(tDfnMatch) if not val]
+if tNoDef:
+    tNoDefMsg = '\n\nThere is test data that is associated with one or more test \
+definitions that are not found. This is usually because the definition was \
+deleted after it was used to run a test.\n\nNote that internal identification \
+numbers are used, rather than names, to uniquely identify test definitions. \
+This means that this condition can occur, for example, when a (new) test \
+definition is given the same name as a previously deleted test definition \
+that was used to run a test. In this case, the data will still contain the \
+identification number of the old test definition, and even though the new test \
+definition has the same name, the new test definition will not be associated \
+with the previously run test.\n\nThere is no test definition found for the following '
+    # accommodate singular or plural in the message
+    if len(tNoDef) == 1:
+        tNoDefMsg += 'test:'
+    else:
+        tNoDefMsg += str(len(tNoDef)) + ' tests:'
 
-#print('**** Test 0: ****')
-#print('**** Test 0 Step 0: ****')
-#print(tests[0]._steps[0].graphData)
-# **** Parse & Process the graph data
-grphObject = Glp2GraphParse(tests[0]._steps[0].graphData)
-# print(grphObject)A
-#
-# **** Create the Test Definition Output Message
-#
-testDfnMsg = '*' * 70 + '\n'
-testDfnMsg += 'Traveler Number _____________________________________________________\n\n'
-testDfnMsg += 'Traveler Operation(s) _______________  Traveler Page(s) _____________\n\n'
-#testDfnMsg += str(testDfns(prt_tDfn[0][1]))
-#print(str(testDfns[prt_tDfn[0][1]]))
+    for testIdx in tNoDef:
+        tNoDefMsg += '\n\nFile Name: ' + tests[testIdx].fileName
+        tNoDefMsg += '\n    Program Name: ' + tests[testIdx].testProgramName
+        tNoDefMsg += '\n    Test number: ' + str(tests[testIdx].testInstanceId)
 
-#        testDfnMsg += 'Program Name: ' + calNotes + '\n\n'
-#        testDfnMsg += 'NOTE: ' + calNotes + '\n\n'
-#        testDfnMsg +='{:37} {:9.2f} {:9.2f}\n' \
-#                .format('Min and Max PLC Nominal Counts: ', minMaxCounts[0], \
-#                                                    minMaxCounts[1])
-#        testDfnMsg += '{:37} {:9.2f} {:9.2f} \n\n' \
-#                .format('Min and Max Nominal EU (' + EuUnitsLabel + '): ', \
-#                        minMaxEu[0], minMaxEu[1])
-#        # Measured counts vs Measured EU table
-#        testDfnMsg +='{:16}  {:30}\n'.format('Measured Counts', \
-#                                    'Measured EU (' + EuUnitsLabel + ')')
-#        testDfnMsg +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
+# Message if there are any unused test definitions.
+defNoT = [didx for didx, val in enumerate(dfnTMatch) if not val]
+if defNoT:
+    defNoTMsg = '\n\nThere are test definitions found that were not used for any \
+of the test data. This is not an indication of a problem, and is being reported \
+for information only.\n\nThe following test definitions are not used in any of the \
+test data:'
+    for defIdx in defNoT:
+        defNoTMsg += '\n\nFile Name: ' + testDfns[defIdx].fileName
+        defNoTMsg += '\n    Definition Name: ' + testDfns[defIdx].name
+        defNoTMsg += '\n    Programmer: ' + testDfns[defIdx].nameOfProgrammer
 
-# Instantiate the extended pdf class and get on with making the pdf
-fnameData= '__zzqq__tempPdf_testDfn__zzqq__.pdf' # not likely to exist and be something else
+# **** Put the information about test definitions and test data associations in 
+# a pdf.
+# First print it to the terminal if verbose argument is used.
+if args.verbose:
+    print(dataDfnAssocMsg)
+    print(tNoDefMsg)
+    print(defNoTMsg)
+
+# Instantiate the extended pdf so headers and footers are available
+fnameData= '__zzqq__tempPdf_dataAssoc__zzqq__.pdf' # not likely to exist and be something else
 # Units are in points (pt)
-pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter', headerText='Test Definition')
+dataAssocPdf = cPdf(orientation = 'P', unit = 'pt', format='Letter',
+                    headerText='Test Definition and Test Data Associations')
 # define the nb alias for total page numbers used in footer
-pdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
-pdf.set_margins(54, 72, 54) # left, top, right margins (in points)
+#dataAssocPdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
+dataAssocPdf.set_margins(54, 72, 54) # left, top, right margins (in points)
 
 # Set the font for the main content
 # use the bold proportional font
-if pdf.fontNames[0] != pdf.defaultFontNames[0]:
+if dataAssocPdf.fontNames[0] != dataAssocPdf.defaultFontNames[0]:
     # non-default
-    pdf.set_font("regularMono", '', 10)
+    dataAssocPdf.set_font("regularMono", '', 10)
 else:
     # default
-    pdf.set_font(pdf.defaultFontNames[0], '', 10)
+    dataAssocPdf.set_font(dataAssocPdf.defaultFontNames[0], '', 10)
 
 # add the content put into outputMsg above
-pdf.add_page() # use ctor params
-pdf.multi_cell(w=0, h=13, txt=testDfnMsg, border=0, align='L', fill=False )
-#pdf.output(name = fnameData, dest='F')
+dataAssocPdf.add_page() # use ctor params
+dataAssocPdf.multi_cell(w=0, h=13, txt=dataDfnAssocMsg + tNoDefMsg + defNoTMsg,
+                        border=0, align='L', fill=False)
+dataAssocPdf.output(name = fnameData, dest='F')
+
+##print('**** Test 0: ****')
+##print('**** Test 0 Step 0: ****')
+##print(tests[0]._steps[0].graphData)
+## **** Parse & Process the graph data
+#grphObject = Glp2GraphParse(tests[0]._steps[0].graphData)
+## print(grphObject)A
+##
+## **** Create the Test Definition Output Message
+##
+#testDfnMsg = '*' * 70 + '\n'
+#testDfnMsg += 'Traveler Number _____________________________________________________\n\n'
+#testDfnMsg += 'Traveler Operation(s) _______________  Traveler Page(s) _____________\n\n'
+##testDfnMsg += str(testDfns(prt_tDfn[0][1]))
+##print(str(testDfns[prt_tDfn[0][1]]))
+#
+##        testDfnMsg += 'Program Name: ' + calNotes + '\n\n'
+##        testDfnMsg += 'NOTE: ' + calNotes + '\n\n'
+##        testDfnMsg +='{:37} {:9.2f} {:9.2f}\n' \
+##                .format('Min and Max PLC Nominal Counts: ', minMaxCounts[0], \
+##                                                    minMaxCounts[1])
+##        testDfnMsg += '{:37} {:9.2f} {:9.2f} \n\n' \
+##                .format('Min and Max Nominal EU (' + EuUnitsLabel + '): ', \
+##                        minMaxEu[0], minMaxEu[1])
+##        # Measured counts vs Measured EU table
+##        testDfnMsg +='{:16}  {:30}\n'.format('Measured Counts', \
+##                                    'Measured EU (' + EuUnitsLabel + ')')
+##        testDfnMsg +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
+#
+## Instantiate the extended pdf class and get on with making the pdf
+#fnameData= '__zzqq__tempPdf_testDfn__zzqq__.pdf' # not likely to exist and be something else
+## Units are in points (pt)
+#pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter', headerText='Test Definition')
+## define the nb alias for total page numbers used in footer
+#pdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
+#pdf.set_margins(54, 72, 54) # left, top, right margins (in points)
+#
+## Set the font for the main content
+## use the bold proportional font
+#if pdf.fontNames[0] != pdf.defaultFontNames[0]:
+#    # non-default
+#    pdf.set_font("regularMono", '', 10)
+#else:
+#    # default
+#    pdf.set_font(pdf.defaultFontNames[0], '', 10)
+#
+## add the content put into outputMsg above
+#pdf.add_page() # use ctor params
+#pdf.multi_cell(w=0, h=13, txt=testDfnMsg, border=0, align='L', fill=False )
+##pdf.output(name = fnameData, dest='F')
 #
 # TODO: Create a graph (MatPlotLib)
 #
