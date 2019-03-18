@@ -80,7 +80,7 @@ from collections import defaultdict
 # on the location of the imported files
 from bpsFile import listFiles
 from bpsCPdf import cPdf
-from bpsPrettyPrint import listPrettyPrint3Col
+from bpsPrettyPrint import listPrettyPrint2ColStr
 
 # specialized libraries unlikely to be used elsewhere. These should
 # travel with this file.
@@ -191,11 +191,11 @@ else:
     testDataPath = join(config['Paths']['common_dir'], config['Paths']['data_dir'])
     testDfnPath = join(config['Paths']['common_dir'], config['Paths']['test_dfn_dir'])
 
-pathMsg  = '\n{:22}{}'.format('Test Data Path: ',testDataPath)
-pathMsg += '\n{:22}{}'.format('Test Definition Path: ', testDfnPath)
-
-if args.verbose:
-    print(pathMsg)
+# construct a message to detail files used.  Use for pdf and verbose output.
+# TODO: Insert PDF Bold 'section' heading
+fileMsg  = '\nThe following paths are searched for test definition and test data files:'
+fileMsg += '\n{:22}{}'.format('Test Data Path: ',testDataPath)
+fileMsg += '\n{:22}{}'.format('Test Definition Path: ', testDfnPath)
 
 # get the decimal separator from the file, or use the default of a ',' (the euro way)
 if config.has_option('TestData', 'decimalSeparator'):
@@ -208,9 +208,9 @@ else:
 testDfnNames = listFiles(testDfnPath)
 testDfns = [] # definition holding spot
 
-if args.verbose:
-    print('\nTest Definitions found:')
-    listPrettyPrint3Col(testDfnNames)
+# TODO: Insert PDF Bold 'section' heading
+fileMsg += '\n\nThe following Test Definition files were found:'
+fileMsg += listPrettyPrint2ColStr(testDfnNames, 40)
 
 # If a test definition file was specified, see if it was found. If not, error out.
 # If no test definition file was specified, load them all, and look for the correct id later
@@ -222,8 +222,12 @@ but was not found. Exiting.')
 elif args.testDfnFile != '' and args.testDfnFile is not None and args.testDfnFile in testDfnNames:
     # Test dfn file specified, and found. Print message and load into a 1 element list. Save the
     # message for use in the PDF output (later).
-    testDfnMsg = '\nSpecified test definition file \'' + args.testDfnFile + '\' was found and is being used.'
-    print(testDfnMsg)
+    # This message will be printed as part of the verbose output also, so only print it here if
+    # verbose is not selected.
+    partMsg = '\n\nSpecified test definition file \'' + args.testDfnFile + '\' was found and is being used.'
+    fileMsg += partMsg
+    if not args.verbose:
+        print(partMsg)
     try:
         testDfns.append(Glp2TestDfn(args.testDfnFile, join(testDfnPath, args.testDfnFile),
                                     args.testDfnEncoding))
@@ -237,9 +241,13 @@ elif args.testDfnFile != '' and args.testDfnFile is not None and args.testDfnFil
 elif args.testDfnFile == '' or args.testDfnFile is None:
     # Test dfn file not specified. Print message and load all the definitions into a list. Save the
     # message for use in the PDF output (later).
-    testDfnMsg = '\nThere was no test definition file specified.  The test definition id in the \
+    # This message will be printed as part of the verbose output also, so only print it here if
+    # verbose is not selected.
+    partMsg = '\n\nThere was no test definition file specified.  The test definition id in the \
 data will be used to try and determine the correct test definition file to use.'
-    print(testDfnMsg)
+    fileMsg += partMsg
+    if not args.verbose:
+        print(partMsg)
 
     # For each definition file name, create and append a Glp2TestDfn object.
     # Exclude files starting with '.', or files that don't end with '*.tpr' (case insensitive)
@@ -257,19 +265,15 @@ data will be used to try and determine the correct test definition file to use.'
     # convert to a tuple to prevent change
     testDfns = tuple(testDfns)
 
-# add more info to the test definition string used for the pdf.
-testDfnMsg += '\nThe following test definition files were found:'
-testDfnMsg += '\n' + str(testDfnNames)
-
-# at this point, testDfns is a tuple containing the test definitions to consider
+# At this point, testDfns is a tuple containing the test definitions to consider
 
 # **** Figure out what test data file to use, and load it (or them!!)
 # Get a list of test data files in the data path
 testDataNames = listFiles(testDataPath)
 
-if args.verbose:
-    print('\nTest data files found:')
-    listPrettyPrint3Col(testDataNames)
+# TODO: Insert PDF Bold 'section' heading
+fileMsg += '\n\nTest following Test Data files were found:'
+fileMsg += listPrettyPrint2ColStr(testDataNames, 40)
 
 # If a test data file was specified, see if it was found. If not, error out.
 # If no test data file was specified, load them all, so they can all be processed.
@@ -281,8 +285,12 @@ but was not found. Exiting.')
 elif args.dataFile != '' and args.dataFile is not None and args.dataFile in testDataNames:
     # Test data file specified, and found. Print message and load into a 1 element list. Save
     # the message for use in the pdf (later).
-    testDataMsg = '\nSpecified test data file \'' + args.dataFile + '\' was found and is being used.'
-    print(testDataMsg)
+    # This message will be printed as part of the verbose output also, so only print it here if
+    # verbose is not selected.
+    partMsg = '\n\nSpecified test data file \'' + args.dataFile + '\' was found and is being used.'
+    fileMsg += partMsg
+    if not args.verbose:
+        print(partMsg)
     # **** read the csv file into a data frame.  The first row is treated as the header
     try:
         with open(join(testDataPath, args.dataFile), mode='r', encoding=args.dataFileEncoding) as dataCsvFile:
@@ -298,10 +306,15 @@ elif args.dataFile != '' and args.dataFile is not None and args.dataFile in test
 
 elif args.dataFile == '' or args.dataFile is None:
     # Test data file not specified. Load all those found.  Save message for pdf use (later).
-    testDataMsg = '\nThere was no test data file specified.  All data files found will be \
+    # This message will be printed as part of the verbose output also, so only print it here if
+    # verbose is not selected.
+    # TODO: Insert PDF Bold 'section' heading
+    partMsg = '\n\nThere was no test data file specified.  All data files found will be \
 processed. File names starting with a \'.\', or files that don\'t end with \'*.csv\' will \
 be ignored. This is to filter out hidden or locked files, or other file types.'
-    print(testDataMsg)
+    fileMsg += partMsg
+    if not args.verbose:
+        print(partMsg)
     tests = [] # this will be a list of found test data objects.
     for fileName in testDataNames:
         # For each data file name, make a list of Glp2TestData objects
@@ -329,9 +342,10 @@ be ignored. This is to filter out hidden or locked files, or other file types.'
 # Convert it to a tuple to prevent bugs from changing it.
 tests = tuple(tests)
 
-# add more info to the test data string used for the pdf.
-testDataMsg += '\nThe following data files were found:'
-testDataMsg += '\n' + str(testDataNames)
+# Now the file related finding, loading, listing, and other early tasks
+# are done. Print the verbose message about them if requested.
+if args.verbose:
+    print(fileMsg)
 
 # **** Link the test data with the test definition
 # At this point we have the test definitions loaded in the testDfns(...) tuple,
@@ -393,6 +407,7 @@ for fn, dfns in fnVsDfn.items():
 # Message if there is any test data without a found definition
 tNoDef = [tidx for tidx, val in enumerate(tDfnMatch) if not val]
 if tNoDef:
+    # TODO: Insert PDF Bold 'section' heading
     tNoDefMsg = '\n\nThere is test data that is associated with one or more test \
 definitions that are not found. This is usually because the definition was \
 deleted after it was used to run a test.\n\nNote that internal identification \
@@ -417,10 +432,12 @@ with the previously run test.\n\nThere is no test definition found for the follo
 # Message if there are any unused test definitions.
 defNoT = [didx for didx, val in enumerate(dfnTMatch) if not val]
 if defNoT:
+    # TODO: Insert PDF Bold 'section' heading
     defNoTMsg = '\n\nThere are test definitions found that were not used for any \
-of the test data. This is not an indication of a problem, and is being reported \
-for information only.\n\nThe following test definitions are not used in any of the \
-test data:'
+of the test data. This is not an indication of a problem. It simply means that \
+a test is defined that was not used when running any of the test for which there \
+is test data.  It is being reported for information only.\n\nThe following test \
+definitions are not used in any of the test data:'
     for defIdx in defNoT:
         defNoTMsg += '\n\nFile Name: ' + testDfns[defIdx].fileName
         defNoTMsg += '\n    Definition Name: ' + testDfns[defIdx].name
@@ -454,7 +471,8 @@ else:
 
 # add the content put into outputMsg above
 dataAssocPdf.add_page() # use ctor params
-dataAssocPdf.multi_cell(w=0, h=13, txt=dataDfnAssocMsg + tNoDefMsg + defNoTMsg,
+dataAssocPdf.multi_cell(w=0, h=13,
+                        txt=fileMsg + dataDfnAssocMsg + tNoDefMsg + defNoTMsg,
                         border=0, align='L', fill=False)
 dataAssocPdf.output(name = fnameData, dest='F')
 
