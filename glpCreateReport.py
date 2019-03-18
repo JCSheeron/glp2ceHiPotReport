@@ -404,8 +404,9 @@ for fn, dfns in fnVsDfn.items():
         # I don't think it is possible to get here, but just for safety
         dataDfnAssocMsg += '    (no definitions associated with this file)'
 
-# Message if there is any test data without a found definition
+# Make a list of test data indexes with no definition
 tNoDef = [tidx for tidx, val in enumerate(tDfnMatch) if not val]
+# Message if there is any test data without a found definition
 if tNoDef:
     # TODO: Insert PDF Bold 'section' heading
     tNoDefMsg = '\n\nThere is test data that is associated with one or more test \
@@ -429,8 +430,9 @@ with the previously run test.\n\nThere is no test definition found for the follo
         tNoDefMsg += '\n    Program Name: ' + tests[testIdx].testProgramName
         tNoDefMsg += '\n    Test number: ' + str(tests[testIdx].testInstanceId)
 
-# Message if there are any unused test definitions.
+# Make a list of test definition indexes with no test data.
 defNoT = [didx for didx, val in enumerate(dfnTMatch) if not val]
+# Message if there are any unused test definitions.
 if defNoT:
     # TODO: Insert PDF Bold 'section' heading
     defNoTMsg = '\n\nThere are test definitions found that were not used for any \
@@ -443,7 +445,7 @@ definitions are not used in any of the test data:'
         defNoTMsg += '\n    Definition Name: ' + testDfns[defIdx].name
         defNoTMsg += '\n    Programmer: ' + testDfns[defIdx].nameOfProgrammer
 
-# **** Put the information about test definitions and test data associations in 
+# **** Put the information about test definitions and test data associations in
 # a pdf.
 # First print it to the terminal if verbose argument is used.
 if args.verbose:
@@ -483,48 +485,58 @@ dataAssocPdf.output(name = fnameData, dest='F')
 #grphObject = Glp2GraphParse(tests[0]._steps[0].graphData)
 ## print(grphObject)A
 ##
-## **** Create the Test Definition Output Message
-##
-#testDfnMsg = '*' * 70 + '\n'
-#testDfnMsg += 'Traveler Number _____________________________________________________\n\n'
-#testDfnMsg += 'Traveler Operation(s) _______________  Traveler Page(s) _____________\n\n'
-##testDfnMsg += str(testDfns(prt_tDfn[0][1]))
-##print(str(testDfns[prt_tDfn[0][1]]))
-#
-##        testDfnMsg += 'Program Name: ' + calNotes + '\n\n'
-##        testDfnMsg += 'NOTE: ' + calNotes + '\n\n'
-##        testDfnMsg +='{:37} {:9.2f} {:9.2f}\n' \
-##                .format('Min and Max PLC Nominal Counts: ', minMaxCounts[0], \
-##                                                    minMaxCounts[1])
-##        testDfnMsg += '{:37} {:9.2f} {:9.2f} \n\n' \
-##                .format('Min and Max Nominal EU (' + EuUnitsLabel + '): ', \
-##                        minMaxEu[0], minMaxEu[1])
-##        # Measured counts vs Measured EU table
-##        testDfnMsg +='{:16}  {:30}\n'.format('Measured Counts', \
-##                                    'Measured EU (' + EuUnitsLabel + ')')
-##        testDfnMsg +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
-#
-## Instantiate the extended pdf class and get on with making the pdf
-#fnameData= '__zzqq__tempPdf_testDfn__zzqq__.pdf' # not likely to exist and be something else
-## Units are in points (pt)
-#pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter', headerText='Test Definition')
-## define the nb alias for total page numbers used in footer
-#pdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
-#pdf.set_margins(54, 72, 54) # left, top, right margins (in points)
-#
-## Set the font for the main content
-## use the bold proportional font
-#if pdf.fontNames[0] != pdf.defaultFontNames[0]:
-#    # non-default
-#    pdf.set_font("regularMono", '', 10)
-#else:
-#    # default
-#    pdf.set_font(pdf.defaultFontNames[0], '', 10)
-#
-## add the content put into outputMsg above
-#pdf.add_page() # use ctor params
-#pdf.multi_cell(w=0, h=13, txt=testDfnMsg, border=0, align='L', fill=False )
-##pdf.output(name = fnameData, dest='F')
+# **** For each (test, test definition) pair, make a pdf of:
+#   The test definition
+#   The test results (tabular)
+#   The test results (graph)
+
+# **** Create the Test Definition Output Message
+for tIdx, dfnIdx in prt_tDfn:
+    testDfnMsg  = '{}{}{}{}'.format('Program Name: ', testDfns[dfnIdx].name,
+                                    'Programmer: ', testDfns[dfnIdx].nameOfProgrammer)
+    testDfnMsg += '{}{}'.format('File Name: ', testDfns[dfnIdx].fileName)
+    testDfnMsg += '{}\n{}'.format('Comments: ', testDfns[dfnIdx].generalComments)
+    print(testDfnMsg)
+
+    testDataMsg  = '\n{}{}{}{}'.format('Program Name: ', tests[tIdx].testProgramName,
+                                     'Device S/N: ', tests[tIdx].deviceNumber)
+    testDataMsg += '{}{}'.format('File Name: ', tests[tIdx].fileName)
+    print(testDataMsg)
+
+
+#testDfnMsg += 'NOTE: ' + calNotes + '\n\n'
+#testDfnMsg +='{:37} {:9.2f} {:9.2f}\n' \
+#        .format('Min and Max PLC Nominal Counts: ', minMaxCounts[0], \
+#                                            minMaxCounts[1])
+#testDfnMsg += '{:37} {:9.2f} {:9.2f} \n\n' \
+#        .format('Min and Max Nominal EU (' + EuUnitsLabel + '): ', \
+#                minMaxEu[0], minMaxEu[1])
+## Measured counts vs Measured EU table
+#testDfnMsg +='{:16}  {:30}\n'.format('Measured Counts', \
+#                            'Measured EU (' + EuUnitsLabel + ')')
+#testDfnMsg +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
+
+# Instantiate the extended pdf cVlass and get on with making the pdf
+fnameData= '__zzqq__tempPdf_testDfn__zzqq__.pdf' # not likely to exist and be something else
+# Units are in points (pt)
+pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter', headerText='Test Definition')
+# define the nb alias for total page numbers used in footer
+pdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
+pdf.set_margins(54, 72, 54) # left, top, right margins (in points)
+
+# Set the font for the main content
+# use the bold proportional font
+if pdf.fontNames[0] != pdf.defaultFontNames[0]:
+    # non-default
+    pdf.set_font("regularMono", '', 10)
+else:
+    # default
+    pdf.set_font(pdf.defaultFontNames[0], '', 10)
+
+# add the content put into outputMsg above
+pdf.add_page() # use ctor params
+pdf.multi_cell(w=0, h=13, txt=testDfnMsg + testDataMsg, border=0, align='L', fill=False )
+#pdf.output(name = fnameData, dest='F')
 #
 # TODO: Create a graph (MatPlotLib)
 #
