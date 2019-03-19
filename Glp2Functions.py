@@ -10,6 +10,7 @@
 # imports
 from ordered_set import OrderedSet # test ids
 from Glp2TestData import Glp2TestData
+from math import ceil
 
 # Create a list of test data objects from a test data file.
 # The file may contain data for more than one test.
@@ -69,4 +70,133 @@ expected to be a tuple or something that can be converted to a tuple.')
     return tests
 
 
+# This function is expecting and FPDF object and a GlpTestDfnStep.  It assumes
+# the pdf format, font, font size, etc has been set up.
+# The output will be 4 rows of cells: 1: a heading row, 2: value row,
+# 3: heading row, 4: value row.
+def MakePdfDfnStepRow(pdf, dfnStep):
+    # calc the effective page width, epw, and the 'unit' cell width.  Per the
+    # desired layout, there are 7 cell widths across a page.
+    # The step number will be the left most, and the additional rows will
+    # be "indented" one unit width
+    epw = pdf.w - (pdf.l_margin + pdf.r_margin)
+    colWidth = epw/6.0
+    # text height
+    textHeight = pdf.font_size
+    # font order is mono regular, mono bold, proportional regular, proportional bold
 
+    # print the first row, a header row (bold)
+    # Step, Mode, Method
+    if pdf.fontNames[1] != pdf.defaultFontNames[1]:
+        # non-default
+        pdf.set_font("boldMono", '')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[1], '')
+
+    pdf.cell(colWidth, textHeight, 'Step', border = 1)
+    pdf.cell(colWidth, textHeight, 'Mode', border = 1)
+    pdf.cell(colWidth * 4, textHeight, 'Method', border = 1)
+    pdf.ln(textHeight)
+
+    # print the 2nd row, a value row (regular weight)
+    if pdf.fontNames[0] != pdf.defaultFontNames[0]:
+        # non-default
+        pdf.set_font("regularMono", '')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[0], '')
+
+    pdf.cell(colWidth, textHeight, str(dfnStep.stepNum), border = 1)
+    pdf.cell(colWidth, textHeight, str(dfnStep.stepMode), border = 1)
+    pdf.cell(colWidth * 4, textHeight, str(dfnStep.stepMethod), border = 1)
+    pdf.ln(textHeight)
+
+    # print the 3rd row: description header (bold)
+    if pdf.fontNames[1] != pdf.defaultFontNames[1]:
+        # non-default
+        pdf.set_font("boldMono", '')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[1], '')
+
+    # extra wide description taking up all the columns.
+    pdf.cell(colWidth * 6.0, textHeight, 'Description', border = 1)
+    pdf.ln(textHeight)
+
+    # print the 4th row: description, proportional, regular weight
+    if pdf.fontNames[2] != pdf.defaultFontNames[2]:
+        # non-default
+        pdf.set_font("regularProp", '')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[2], '')
+
+    # a line break is not needed if the multi_cell description is mulitple lines
+    # detect the multiple line case
+    startRowY = pdf.get_y()
+    pdf.cell(colWidth * 6.0, textHeight, str(dfnStep.stepDescription), border = 1)
+    endRowY = pdf.get_y()
+    rowLines = ceil((endRowY - startRowY) / textHeight)
+    print('rowLines: ' + str(rowLines))
+    if rowLines < 1:
+        pdf.ln(textHeight) # only needed after a description shorter than 1 line.
+
+    # print the 5th row: Header Row (bold)
+    # Test Voltage, Current Range, current limit, test time, ramp time, delay time
+    if pdf.fontNames[1] != pdf.defaultFontNames[1]:
+        # non-default
+        pdf.set_font("boldMono", '')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[1], '')
+
+    pdf.cell(colWidth, textHeight, 'Test Volt.', border = 1)
+    pdf.cell(colWidth, textHeight, 'I Range', border = 1)
+    pdf.cell(colWidth, textHeight, 'I Limit', border = 1)
+    pdf.cell(colWidth, textHeight, 'Test Time', border = 1)
+    pdf.cell(colWidth, textHeight, 'Ramp Time', border = 1)
+    pdf.cell(colWidth, textHeight, 'Delay Time', border = 1)
+    pdf.ln(textHeight)
+
+    # print the 6th row: values (regular weight)
+    if pdf.fontNames[0] != pdf.defaultFontNames[0]:
+        # non-default
+        pdf.set_font("regularMono", '')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[0], '')
+
+    pdf.cell(colWidth, textHeight, str(dfnStep.testVoltage), border = 1)
+    pdf.cell(colWidth, textHeight, str(dfnStep.currentRange), border = 1)
+    pdf.cell(colWidth, textHeight, str(dfnStep.currentLimit), border = 1)
+    pdf.cell(colWidth, textHeight, str(dfnStep.testTime), border = 1)
+    pdf.cell(colWidth, textHeight, str(dfnStep.rampTime), border = 1)
+    pdf.cell(colWidth, textHeight, str(dfnStep.delayTime), border = 1)
+    pdf.ln(textHeight)
+
+
+
+# Given the width, height, and a string, determine how high the multi-cell
+# will be (auto line wrap).  Use the passed in unit and parameter so the 
+# calculated value takes into account the target font and unit.
+#def GetMultiCellHeight(pdf, unit, w, h, txt, border = 0, align = 'J', fill = False):
+#    '''Return the height of a multi-cell given a height, width, and string.'''
+#    # Note that the border and align and fill are there to make the call
+#    # consistent with the multi_cell ctor.
+#    # This routine is a bit brute force:  Make a pdf and a multicell that
+#    # will never be seen, and calc and return the delta Y value.
+#    #
+#    # Get params from passed in pdf
+#    font_family = pdf.font_family
+#    font_style = pdf.font_style
+#    font_size_pt = pdf.font_size_pt
+#    # make a local pdf
+#    tpdf = FPDF(format='letter', unit = unit)
+#    tpdf.add_page()
+#    tpdf.set_font(font_family, font_style, font_size_pt)
+#    startY = tpdf.get_y()
+#    tpdf.multi_cell(w, h, txt, border, align, fill)
+#    endY = tpdf.get_y()
+#    return (endY - startY)
+#

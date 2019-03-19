@@ -88,6 +88,7 @@ from Glp2TestDfn import Glp2TestDfn
 from Glp2TestData import Glp2TestData
 # NOTE: The helper function MakeTestList in GlpFunctions requires ordered-set
 # which normally needs to be installed.
+from Glp2Functions import MakeTestList, MakePdfDfnStepRow
 from Glp2Functions import MakeTestList
 from Glp2GraphParse import Glp2GraphParse
 
@@ -524,19 +525,14 @@ pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter', headerText='Test Def
 pdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
 pdf.set_margins(54, 72, 54) # left, top, right margins (in points)
 
-# Set the font for the main content
-# use the bold proportional font
-if pdf.fontNames[0] != pdf.defaultFontNames[0]:
-    # non-default
-    pdf.set_font("regularMono", '', 10)
-else:
-    # default
-    pdf.set_font(pdf.defaultFontNames[0], '', 10)
+print(pdf.defaultFontNames)
+print(pdf.fontNames)
 
 # add the content put into outputMsg above
 pdf.add_page() # use ctor params
-pdf.multi_cell(w=0, h=13, txt=testDfnMsg + testDataMsg, border=0, align='L', fill=False )
-#pdf.output(name = fnameData, dest='F')
+MakePdfDfnStepRow(pdf, testDfns[0]._steps[0])
+#pdf.multi_cell(w=0, h=13, txt=testDfnMsg + testDataMsg, border=0, align='L', fill=False )
+pdf.output(name = fnameData, dest='F')
 #
 # TODO: Create a graph (MatPlotLib)
 #
