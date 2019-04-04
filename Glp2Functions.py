@@ -70,15 +70,13 @@ expected to be a tuple or something that can be converted to a tuple.')
     return tests
 
 
-# This function is expecting and FPDF object and a GlpTestDfnStep.  It assumes
+# This function is expecting an FPDF object and a Glp2TestDfnStep.  It assumes
 # the pdf format, font, font size, etc has been set up.
 # The output will be 4 rows of cells: 1: a heading row, 2: value row,
 # 3: heading row, 4: value row.
 def MakePdfDfnStepRow(pdf, dfnStep):
     # calc the effective page width, epw, and the 'unit' cell width.  Per the
-    # desired layout, there are 7 cell widths across a page.
-    # The step number will be the left most, and the additional rows will
-    # be "indented" one unit width
+    # desired layout, there are 6 cell widths across a page.
     epw = pdf.w - (pdf.l_margin + pdf.r_margin)
     colWidth = epw/6.0
     # text height
@@ -86,7 +84,7 @@ def MakePdfDfnStepRow(pdf, dfnStep):
     # font order is mono regular, mono bold, proportional regular, proportional bold
 
     # print the first row, a header row (bold)
-    # Step, Mode, Method
+    # Step, Mode, Method header
     if pdf.fontNames[1] != pdf.defaultFontNames[1]:
         # non-default
         pdf.set_font("boldMono", '')
@@ -100,6 +98,7 @@ def MakePdfDfnStepRow(pdf, dfnStep):
     pdf.ln(textHeight)
 
     # print the 2nd row, a value row (regular weight)
+    # Step, Mode, Method values
     if pdf.fontNames[0] != pdf.defaultFontNames[0]:
         # non-default
         pdf.set_font("regularMono", '')
@@ -160,6 +159,7 @@ def MakePdfDfnStepRow(pdf, dfnStep):
     pdf.ln(textHeight)
 
     # print the 6th row: values (regular weight)
+    # Test Voltage, Current Range, current limit, test time, ramp time, delay time
     if pdf.fontNames[0] != pdf.defaultFontNames[0]:
         # non-default
         pdf.set_font("regularMono", '')
@@ -175,6 +175,76 @@ def MakePdfDfnStepRow(pdf, dfnStep):
     pdf.cell(colWidth, textHeight, str(dfnStep.delayTime), border = 1)
     pdf.ln(textHeight)
 
+# This function is expecting an FPDF object and a Glp2TestDfnStep.  It assumes
+# the pdf format, font, font size, etc has been set up.
+# The output will be 4 rows of cells: 1: a heading row, 2: value row,
+# 3: heading row, 4: value row.
+def MakePdfDataStepRow(pdf, dataStep):
+    # calc the effective page width, epw, and the 'unit' cell width.  Somewhat
+    # arbitrarily, but also to be consistent with the similar function for
+    # definition steps, there will be a unit cell width based on 6 cells per 
+    # page width.
+    epw = pdf.w - (pdf.l_margin + pdf.r_margin)
+    colWidth = epw/6.0
+    # text height
+    textHeight = pdf.font_size
+    # font order is mono regular, mono bold, proportional regular, proportional bold
+
+    # print the first row, a header row (bold)
+    # Step, Timestamp
+    if pdf.fontNames[1] != pdf.defaultFontNames[1]:
+        # non-default
+        pdf.set_font("boldMono", '')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[1], '')
+
+    pdf.cell(colWidth, textHeight, 'Step', border = 1)
+    pdf.cell(colWidth * 5, textHeight, 'Timestamp', border = 1)
+    pdf.ln(textHeight)
+
+    # print the 2nd row, a value row (regular weight)
+    # Step, Timestamp
+    if pdf.fontNames[0] != pdf.defaultFontNames[0]:
+        # non-default
+        pdf.set_font("regularMono", '')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[0], '')
+
+    pdf.cell(colWidth, textHeight, str(dataStep.stepNum), border = 1)
+    pdf.cell(colWidth * 5, textHeight, str(dataStep.timeTimestamp), border = 1)
+    pdf.ln(textHeight)
+
+    # print the 3rd row: Header Row (bold)
+    # Nom voltage, measured voltage, current limit, measured current
+    if pdf.fontNames[1] != pdf.defaultFontNames[1]:
+        # non-default
+        pdf.set_font("boldMono", '')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[1], '')
+
+    pdf.cell(colWidth, textHeight, 'Volt. Nom.', border = 1)
+    pdf.cell(colWidth, textHeight, 'Volt. Meas.', border = 1)
+    pdf.cell(colWidth, textHeight, 'I Limit', border = 1)
+    pdf.cell(colWidth, textHeight, 'I Meas.', border = 1)
+    pdf.ln(textHeight)
+
+    # print the 4th row: values (regular weight)
+    # Nom voltage, measured voltage, current limit, measured current
+    if pdf.fontNames[0] != pdf.defaultFontNames[0]:
+        # non-default
+        pdf.set_font("regularMono", '')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[0], '')
+
+    pdf.cell(colWidth, textHeight, str(dataStep.nominalVoltage), border = 1)
+    pdf.cell(colWidth, textHeight, str(dataStep.measuredVoltage), border = 1)
+    pdf.cell(colWidth, textHeight, str(dataStep.currentLimit), border = 1)
+    pdf.cell(colWidth, textHeight, str(dataStep.measuredCurrent), border = 1)
+    pdf.ln(textHeight)
 
 
 # Given the width, height, and a string, determine how high the multi-cell
