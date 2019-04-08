@@ -200,7 +200,7 @@ def MakePdfDataStepRow(pdf, dataStep):
         pdf.set_font(pdf.defaultFontNames[1], '')
 
     pdf.cell(colWidth, textHeight, 'Step', border = 1)
-    pdf.cell(colWidth * 5, textHeight, 'Timestamp', border = 1)
+    pdf.cell(colWidth * 3, textHeight, 'Timestamp', border = 1)
     pdf.ln(textHeight)
 
     # print the 2nd row, a value row (regular weight)
@@ -212,8 +212,8 @@ def MakePdfDataStepRow(pdf, dataStep):
         # default
         pdf.set_font(pdf.defaultFontNames[0], '')
 
-    pdf.cell(colWidth, textHeight, str(dataStep.stepNum), border = 1)
-    pdf.cell(colWidth * 5, textHeight, str(dataStep.timeTimestamp), border = 1)
+    pdf.cell(colWidth, textHeight, str(dataStep.stepNumber), border = 1)
+    pdf.cell(colWidth * 3, textHeight, str(dataStep.testTimestamp), border = 1)
     pdf.ln(textHeight)
 
     # print the 3rd row: Header Row (bold)

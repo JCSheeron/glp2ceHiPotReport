@@ -88,7 +88,7 @@ from Glp2TestDfn import Glp2TestDfn
 from Glp2TestData import Glp2TestData
 # NOTE: The helper function MakeTestList in GlpFunctions requires ordered-set
 # which normally needs to be installed.
-from Glp2Functions import MakeTestList, MakePdfDfnStepRow
+from Glp2Functions import MakeTestList, MakePdfDfnStepRow, MakePdfDataStepRow
 from Glp2Functions import MakeTestList
 from Glp2GraphParse import Glp2GraphParse
 
@@ -530,7 +530,8 @@ print(pdf.fontNames)
 
 # add the content put into outputMsg above
 pdf.add_page() # use ctor params
-MakePdfDfnStepRow(pdf, testDfns[0]._steps[0])
+#MakePdfDfnStepRow(pdf, testDfns[0]._steps[0])
+MakePdfDataStepRow(pdf, tests[0]._steps[0])
 #pdf.multi_cell(w=0, h=13, txt=testDfnMsg + testDataMsg, border=0, align='L', fill=False )
 pdf.output(name = fnameData, dest='F')
 #

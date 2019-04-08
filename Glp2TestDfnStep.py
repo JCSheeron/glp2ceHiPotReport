@@ -78,7 +78,7 @@ must be a dictionary, or something convertable to an dictionary. Step data not s
         return self._stepNum
 
     @stepNum.setter
-    def stepNum(self, stepNum):
+    def stepNumber(self, stepNum):
         # step number must be an integer, or something convertable to an integer
         try:
             self._stepNum = int(stepNum)
