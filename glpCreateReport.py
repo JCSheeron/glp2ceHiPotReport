@@ -50,7 +50,7 @@ from datetime import datetime, time
 # os file related
 # join combines path strings in a smart way (i.e. will insert '/' if missing,
 # or remove a '/' if a join creates a repeat.
-from os.path import join
+from os.path import join, splitext
 
 # config file parser
 import configparser
@@ -89,7 +89,6 @@ from Glp2TestData import Glp2TestData
 # NOTE: The helper function MakeTestList in GlpFunctions requires ordered-set
 # which normally needs to be installed.
 from Glp2Functions import MakeTestList, MakePdfDfnStepRow, MakePdfDataStepRow
-from Glp2Functions import MakeTestList
 from Glp2GraphParse import Glp2GraphParse
 
 # **** argument parsing
@@ -379,6 +378,8 @@ for tidx, test in enumerate(tests):
             dfnTMatch[didx] = True
     # populate the file name dictionary
     fnVsDfn[test.fileName].add(test.testProgramName)
+# now convet the list to a tuple
+prt_tDfn = tuple(prt_tDfn)
 
 # **** Create a string used for the pdf output about test data files and
 # test definitions.
@@ -490,50 +491,83 @@ dataAssocPdf.output(name = fnameData, dest='F')
 #   The test definition
 #   The test results (tabular)
 #   The test results (graph)
-
-# **** Create the Test Definition Output Message
 for tIdx, dfnIdx in prt_tDfn:
-    testDfnMsg  = '{}{}{}{}'.format('Program Name: ', testDfns[dfnIdx].name,
-                                    'Programmer: ', testDfns[dfnIdx].nameOfProgrammer)
-    testDfnMsg += '{}{}'.format('File Name: ', testDfns[dfnIdx].fileName)
-    testDfnMsg += '{}\n{}'.format('Comments: ', testDfns[dfnIdx].generalComments)
-    print(testDfnMsg)
+    # Instantiate the extended pdf cVlass and get on with making the pdf
+    # Units are in points (pt)
+    headerText = '{}          {} {}'.format('Test Data','File Name:', tests[tIdx].fileName)
+    pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter', headerText=headerText)
+    # define the nb alias for total page numbers used in footer
+    pdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
+    pdf.set_margins(54, 68, 54) # left, top, right margins (in points)
+    # add a page to be able to add content
+    pdf.add_page() # use ctor params
+    textHeight = pdf.font_size
+    # calc the effective page width, epw, and the 'unit' cell width.
+    # colwidth is somewhat arbitrary, but picked to be a convenient size
+    epw = pdf.w - (pdf.l_margin + pdf.r_margin)
+    colWidth = epw/6.0
+    # create pdf file name from test data file name and use indexes to make it unique
+    # TODO: think of a better file name?
+    fname= 'TestData_' + splitext(tests[tIdx].fileName)[0] + '_' + str(tIdx) + '_' + str(dfnIdx) + '.pdf'
+    # Insert a bold section heading for the definition
+    if pdf.fontNames[3] != pdf.defaultFontNames[3]:
+        # non-default
+        pdf.set_font("boldProp", 'B')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[3], 'B')
+    pdf.cell(epw, textHeight * 1.2, 'Test Definition', border = 0)
+    # Reset back to regular weight, mono spaced
+    if pdf.fontNames[0] != pdf.defaultFontNames[0]:
+        # non-default
+        pdf.set_font("regularMono", '')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[0], '')
+    pdf.ln(textHeight)
+    #
+    # test definition data, but include test data file name in the beginning
+    # to help make it clear where/why this definition is being used
+    testDfnMsg  = '\n{} {}'.format('Program Name:', testDfns[dfnIdx].name)
+    testDfnMsg += '\n{} {}'.format('Programmer:', testDfns[dfnIdx].nameOfProgrammer)
+    testDfnMsg += '\n{} {}'.format('File Name:', testDfns[dfnIdx].fileName)
+    testDfnMsg += '\n{} {}\n\n'.format('Comments:', testDfns[dfnIdx].generalComments)
+    # Add the test dfn data to the pdf
+    pdf.multi_cell(w=0, h=13, txt=testDfnMsg, border=0, align='L', fill=False )
+    # add the definition steps to the pdf
+    for step in testDfns[dfnIdx]._steps:
+        MakePdfDfnStepRow(pdf, step)
+    # Test Data
+    # Insert a bold section heading for the test data
+    if pdf.fontNames[3] != pdf.defaultFontNames[3]:
+        # non-default
+        pdf.set_font("boldProp", 'B')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[3], 'B')
+    pdf.cell(epw, textHeight * 1.2, 'Test Data', border = 0)
+    # Reset back to regular weight, mono spaced
+    if pdf.fontNames[0] != pdf.defaultFontNames[0]:
+        # non-default
+        pdf.set_font("regularMono", '')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[0], '')
+    pdf.ln(textHeight)
+    testDataMsg  = '\n{} {}'.format('Program Name:', tests[tIdx].testProgramName)
+    testDataMsg += '\n{} {}'.format('Device S/N:', tests[tIdx].deviceNumber)
+    testDataMsg += '\n{} {}\n'.format('Operator:', tests[tIdx].operator)
+    # add the test data to thd pdf
+    pdf.multi_cell(w=0, h=13, txt=testDataMsg, border=0, align='L', fill=False )
+    # add the data steps to the pdf
+    for step in tests[tIdx]._steps:
+        MakePdfDataStepRow(pdf, step)
+    # writ the pdf to a file
+    pdf.output(name = fname, dest='F')
 
-    testDataMsg  = '\n{}{}{}{}'.format('Program Name: ', tests[tIdx].testProgramName,
-                                     'Device S/N: ', tests[tIdx].deviceNumber)
-    testDataMsg += '{}{}'.format('File Name: ', tests[tIdx].fileName)
-    print(testDataMsg)
-
-
-#testDfnMsg += 'NOTE: ' + calNotes + '\n\n'
-#testDfnMsg +='{:37} {:9.2f} {:9.2f}\n' \
-#        .format('Min and Max PLC Nominal Counts: ', minMaxCounts[0], \
-#                                            minMaxCounts[1])
-#testDfnMsg += '{:37} {:9.2f} {:9.2f} \n\n' \
-#        .format('Min and Max Nominal EU (' + EuUnitsLabel + '): ', \
-#                minMaxEu[0], minMaxEu[1])
-## Measured counts vs Measured EU table
-#testDfnMsg +='{:16}  {:30}\n'.format('Measured Counts', \
-#                            'Measured EU (' + EuUnitsLabel + ')')
-#testDfnMsg +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
-
-# Instantiate the extended pdf cVlass and get on with making the pdf
-fnameData= '__zzqq__tempPdf_testDfn__zzqq__.pdf' # not likely to exist and be something else
-# Units are in points (pt)
-pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter', headerText='Test Definition')
-# define the nb alias for total page numbers used in footer
-pdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
-pdf.set_margins(54, 72, 54) # left, top, right margins (in points)
-
-print(pdf.defaultFontNames)
-print(pdf.fontNames)
-
-# add the content put into outputMsg above
-pdf.add_page() # use ctor params
-#MakePdfDfnStepRow(pdf, testDfns[0]._steps[0])
-MakePdfDataStepRow(pdf, tests[0]._steps[0])
-#pdf.multi_cell(w=0, h=13, txt=testDfnMsg + testDataMsg, border=0, align='L', fill=False )
-pdf.output(name = fnameData, dest='F')
+##MakePdfDfnStepRow(pdf, testDfns[0]._steps[0])
+#MakePdfDataStepRow(pdf, tests[0]._steps[0])
+#pdf.output(name = fnameData, dest='F')
 #
 # TODO: Create a graph (MatPlotLib)
 #

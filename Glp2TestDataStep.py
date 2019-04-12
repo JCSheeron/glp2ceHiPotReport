@@ -39,7 +39,8 @@
 #
 class Glp2TestDataStep(object):
     def __init__(self, data=None, header=None, decimalSeparator = ',',
-                 testStepGuidIdx=1, stepNumberIdx=2, deviceNumberIdx=31,
+                 testStepGuidIdx=1, commentsIdx=20, operatorIdx=27,
+                 deviceNumberIdx=31, stepNumberIdx=2,
                  nomVoltIdx=6, nomVoltUnitIdx=7, actVoltIdx=8,
                  actVoltUnitIdx=9, currentLimIdx=10, currentLimUnitIdx=11,
                  actCurrIdx=12, actCurrUnitIdx=13, timestampIdx=30, graphDataIdx=76):
@@ -80,8 +81,10 @@ No step information captured.')
 
         self._decimalSeparator = decimalSeparator
         self._testStepGuidIdx = testStepGuidIdx
-        self._stepNumberIdx = stepNumberIdx
+        self._commentsIdx = commentsIdx
+        self._operatorIdx = operatorIdx
         self._deviceNumberIdx = deviceNumberIdx
+        self._stepNumberIdx = stepNumberIdx
         self._nomVoltIdx = nomVoltIdx
         self._nomVoltUnitIdx = nomVoltUnitIdx
         self._actVoltIdx = actVoltIdx
@@ -147,10 +150,18 @@ No step information captured.')
             return None
 
     @property
-    def stepNumber(self):
+    def comments(self):
         # get the value from the raw data if the data is present
-        if self._rawData is not None and self._stepNumberIdx + 1 <= len(self._rawData):
-            return int(self._rawData[self._stepNumberIdx])
+        if self._rawData is not None and self._commentsIdx + 1 <= len(self._rawData):
+            return self._rawData[self._commentsIdx]
+        else:
+            return None
+
+    @property
+    def operator(self):
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._operatorIdx + 1 <= len(self._rawData):
+            return self._rawData[self._operatorIdx]
         else:
             return None
 
@@ -159,6 +170,14 @@ No step information captured.')
         # get the value from the raw data if the data is present
         if self._rawData is not None and self._deviceNumberIdx + 1 <= len(self._rawData):
             return self._rawData[self._deviceNumberIdx]
+        else:
+            return None
+
+    @property
+    def stepNumber(self):
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._stepNumberIdx + 1 <= len(self._rawData):
+            return int(self._rawData[self._stepNumberIdx])
         else:
             return None
 

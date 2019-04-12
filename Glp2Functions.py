@@ -137,7 +137,6 @@ def MakePdfDfnStepRow(pdf, dfnStep):
     pdf.cell(colWidth * 6.0, textHeight, str(dfnStep.stepDescription), border = 1)
     endRowY = pdf.get_y()
     rowLines = ceil((endRowY - startRowY) / textHeight)
-    print('rowLines: ' + str(rowLines))
     if rowLines < 1:
         pdf.ln(textHeight) # only needed after a description shorter than 1 line.
 
@@ -173,7 +172,7 @@ def MakePdfDfnStepRow(pdf, dfnStep):
     pdf.cell(colWidth, textHeight, str(dfnStep.testTime), border = 1)
     pdf.cell(colWidth, textHeight, str(dfnStep.rampTime), border = 1)
     pdf.cell(colWidth, textHeight, str(dfnStep.delayTime), border = 1)
-    pdf.ln(textHeight)
+    pdf.ln(textHeight * 3)
 
 # This function is expecting an FPDF object and a Glp2TestDfnStep.  It assumes
 # the pdf format, font, font size, etc has been set up.
@@ -216,7 +215,36 @@ def MakePdfDataStepRow(pdf, dataStep):
     pdf.cell(colWidth * 3, textHeight, str(dataStep.testTimestamp), border = 1)
     pdf.ln(textHeight)
 
-    # print the 3rd row: Header Row (bold)
+    # print the 3rd row: comments header (bold)
+    if pdf.fontNames[1] != pdf.defaultFontNames[1]:
+        # non-default
+        pdf.set_font("boldMono", '')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[1], '')
+
+    # extra wide description taking up all the columns.
+    pdf.cell(colWidth * 4.0, textHeight, 'Comments', border = 1)
+    pdf.ln(textHeight)
+
+    # print the 4th row: description, proportional, regular weight
+    if pdf.fontNames[2] != pdf.defaultFontNames[2]:
+        # non-default
+        pdf.set_font("regularProp", '')
+    else:
+        # default
+        pdf.set_font(pdf.defaultFontNames[2], '')
+
+    # a line break is not needed if the multi_cell description is mulitple lines
+    # detect the multiple line case
+    startRowY = pdf.get_y()
+    pdf.cell(colWidth * 4.0, textHeight, str(dataStep.comments), border = 1)
+    endRowY = pdf.get_y()
+    rowLines = ceil((endRowY - startRowY) / textHeight)
+    if rowLines < 1:
+        pdf.ln(textHeight) # only needed after a description shorter than 1 line.
+
+    # print the 5th row: Header Row (bold)
     # Nom voltage, measured voltage, current limit, measured current
     if pdf.fontNames[1] != pdf.defaultFontNames[1]:
         # non-default
@@ -231,7 +259,7 @@ def MakePdfDataStepRow(pdf, dataStep):
     pdf.cell(colWidth, textHeight, 'I Meas.', border = 1)
     pdf.ln(textHeight)
 
-    # print the 4th row: values (regular weight)
+    # print the 6th row: values (regular weight)
     # Nom voltage, measured voltage, current limit, measured current
     if pdf.fontNames[0] != pdf.defaultFontNames[0]:
         # non-default
@@ -244,29 +272,6 @@ def MakePdfDataStepRow(pdf, dataStep):
     pdf.cell(colWidth, textHeight, str(dataStep.measuredVoltage), border = 1)
     pdf.cell(colWidth, textHeight, str(dataStep.currentLimit), border = 1)
     pdf.cell(colWidth, textHeight, str(dataStep.measuredCurrent), border = 1)
-    pdf.ln(textHeight)
+    pdf.ln(textHeight * 3)
 
 
-# Given the width, height, and a string, determine how high the multi-cell
-# will be (auto line wrap).  Use the passed in unit and parameter so the 
-# calculated value takes into account the target font and unit.
-#def GetMultiCellHeight(pdf, unit, w, h, txt, border = 0, align = 'J', fill = False):
-#    '''Return the height of a multi-cell given a height, width, and string.'''
-#    # Note that the border and align and fill are there to make the call
-#    # consistent with the multi_cell ctor.
-#    # This routine is a bit brute force:  Make a pdf and a multicell that
-#    # will never be seen, and calc and return the delta Y value.
-#    #
-#    # Get params from passed in pdf
-#    font_family = pdf.font_family
-#    font_style = pdf.font_style
-#    font_size_pt = pdf.font_size_pt
-#    # make a local pdf
-#    tpdf = FPDF(format='letter', unit = unit)
-#    tpdf.add_page()
-#    tpdf.set_font(font_family, font_style, font_size_pt)
-#    startY = tpdf.get_y()
-#    tpdf.multi_cell(w, h, txt, border, align, fill)
-#    endY = tpdf.get_y()
-#    return (endY - startY)
-#

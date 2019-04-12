@@ -43,7 +43,8 @@ class Glp2TestData(object):
     def __init__(self, fileName=None, data=None, header=None, testInstanceId=None,
                  decimalSeparator=',',
                  testGuidIdx=0, testProgramNameIdx=25, testProgramGuidIdx=49,
-                 deviceNumberIdx=31, testStepGuidIdx=1, stepNumberIdx=2,
+                 testStepGuidIdx=1, commentsIdx=20, operatorIdx=27,
+                 deviceNumberIdx=31, stepNumberIdx=2,
                  nomVoltIdx=6, nomVoltUnitIdx=7, actVoltIdx=8, actVoltUnitIdx=9,
                  currentLimIdx=10, currentLimUnitIdx=11, actCurrIdx=12,
                  actCurrUnitIdx=13, timestampIdx=30, graphDataIdx=76):
@@ -52,8 +53,10 @@ class Glp2TestData(object):
         # indexes are the normal column counts, starting at zero.
         #
         # These parameters are just passed through to the Glp2TestDataStep ctor:
-        #   deviceNumberIdx (used by both Glp2TestData and Glp2TestDataStep)
         #   testStepGuidIdx
+        #   commentsIdx
+        #   operatorIdx (used by both Glp2TestData and Glp2TestDataStep)
+        #   deviceNumberIdx (used by both Glp2TestData and Glp2TestDataStep)
         #   stepNumberIdx
         #   nomVoltIdx
         #   nomVoltUnitIdx
@@ -118,8 +121,10 @@ No Data Captured.')
                         steps.append(Glp2TestDataStep(row, self._dataHeader,
                                      decimalSeparator,
                                      testStepGuidIdx=testStepGuidIdx,
-                                     stepNumberIdx=stepNumberIdx,
+                                     commentsIdx=commentsIdx,
+                                     operatorIdx=operatorIdx,
                                      deviceNumberIdx=deviceNumberIdx,
+                                     stepNumberIdx=stepNumberIdx,
                                      nomVoltIdx=nomVoltIdx,
                                      nomVoltUnitIdx=nomVoltUnitIdx,
                                      actVoltIdx=actVoltIdx,
@@ -139,6 +144,7 @@ No Data Captured.')
         self._testGuidIdx = testGuidIdx
         self._testProgramNameIdx = testProgramNameIdx
         self._testProgramGuidIdx = testProgramGuidIdx
+        self._operatorIdx = operatorIdx
         self._deviceNumberIdx = deviceNumberIdx
 
     def __repr__(self):
@@ -219,6 +225,19 @@ No Data Captured.')
             return None
 
     @property
+    def operator(self, step=1):
+        # steps start at 1
+        if self._rawData is not None and step >= 1 and step <= len(self._rawData):
+            # there is raw data and the step is within range (within the width of a row)
+            if self._operatorIdx + 1 <= len(self._rawData[step - 1]):
+                # the index is within range
+                return self._rawData[step - 1][self._operatorIdx]
+            else: # index out of range
+                return None
+        else: # no data or step out of range
+            return None
+
+    @property
     def deviceNumber(self, step=1):
         # steps start at 1
         if self._rawData is not None and step >= 1 and step <= len(self._rawData):
@@ -230,10 +249,6 @@ No Data Captured.')
                 return None
         else: # no data or step out of range
             return None
-
-    @property
-    def stepCount(self):
-        return len(self._rawData)
 
     @property
     def testInstanceId(self):
@@ -278,6 +293,27 @@ Data not changed.')
                 print(ve)
         else: # no data provided
             self._rawData = None
+
+    @property
+    def stepCount(self):
+        return len(self._steps)
+
+    # return the step data set (a tuple)
+    @property
+    def steps(self):
+        return self._steps
+
+    # Return a step given a step number. Step number is 1 based.
+    # I.e. step = 1 is the 1st step is also self._steps[0]
+    @property
+    def step(self, stepNo):
+        step = int(stepNo)
+        if step < 1 or step > self._numberOfSteps:
+            # invalid step number
+            return None
+        else:
+            #valid step number
+            return self._steps[step - 1]
 
 
 

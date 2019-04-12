@@ -21,7 +21,7 @@ class Glp2TestDfn(object):
         if fileName is None:
             self._config = configparser.ConfigParser()
             self._numberOfSteps = 0
-            self._steps = []
+            self._steps = () # empty tuple
         else:
             # Make a config object, and read in the config file name.
             # The fileName should be a test definition, and the definition
@@ -34,15 +34,18 @@ class Glp2TestDfn(object):
             # test definition step objects.
             # init list of steps to an empty list. It will say empty if there
             # is not at least one step.
-            self._steps=[]
+            steps=[]
             if self._numberOfSteps > 0: # there is at least one step
                 # there is at least one step. Loop thru, retreive the values
                 # from the config object and make dfn step objects
                 for step in range(1, self._numberOfSteps + 1):
                     sectionName = constants.DFN_STEP_SECTION_PREFIX + str(step)
-                    self._steps.append(Glp2TestDfnStep(step, self._config.items(sectionName)))
+                    steps.append(Glp2TestDfnStep(step, self._config.items(sectionName)))
             else: # there are no steps
                 pass    # nothing to do!
+
+            # convert steps to a member tuple
+            self._steps = tuple(steps)
 
     def __repr__(self):
         # TODO: Make output a dictionary or someting in line with the goal of __repr__
@@ -83,6 +86,7 @@ class Glp2TestDfn(object):
 
     # this function will determine how many steps are contained in the
     # test definition. Pass a defaulted setion prefix.
+    # It is intended to be used internally to set the _numberOfSteps member
     def _GetNumOfSteps(self, sectionPrefix=constants.DFN_STEP_SECTION_PREFIX):
         numOfSteps = 0
         stepNum = 1
@@ -95,6 +99,7 @@ class Glp2TestDfn(object):
                 stepNum += 1
             else:
                 return numOfSteps
+
     # properties
     @property
     def fileName(self):
@@ -140,6 +145,23 @@ class Glp2TestDfn(object):
         self._config.read(newFile, fileEncoding)
 
     @property
-    def numberOfSteps(self):
+    def StepCount(self):
         return self._numberOfSteps
+
+    # return the step data set (a tuple)
+    @property
+    def steps(self):
+        return self._steps
+
+    # Return a step given a step number. Step number is 1 based.
+    # I.e. step = 1 is the 1st step is also self._steps[0]
+    @property
+    def step(self, stepNo):
+        step = int(stepNo)
+        if step < 1 or step > self._numberOfSteps:
+            # invalid step number
+            return None
+        else:
+            #valid step number
+            return self._steps[step - 1]
 
