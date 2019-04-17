@@ -154,7 +154,7 @@ No Data Captured.')
         # Epression that could be used to recreate an object with
         # the same value.'
         outputMsg=  '{:26} {}\n'.format('File Name: ', self.fileName)
-        outputMsg+= '{:26} {}\n'.format('Test Id: ', self.testGuid)
+        outputMsg+= '{:26} {}\n'.format('Test Id: ', self.getTestGuid())
         outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) Name: ', self.testProgramName)
         outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) GUID: ', self.testProgramGuid)
         outputMsg+= '{:26} {}\n'.format('Device Number: ', self.deviceNumber)
@@ -168,7 +168,7 @@ No Data Captured.')
         # The goal of __str__ is to create a string representation
         # of the object that is readable to a user (not a programmer).
         outputMsg=  '{:26} {}\n'.format('File Name: ', self.fileName)
-        outputMsg+= '{:26} {}\n'.format('Test Id: ', self.testGuid)
+        outputMsg+= '{:26} {}\n'.format('Test Id: ', self.getTestGuid())
         outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) Name: ', self.testProgramName)
         outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) GUID: ', self.testProgramGuid)
         outputMsg+= '{:26} {}\n'.format('Device Number: ', self.deviceNumber)
@@ -179,14 +179,14 @@ No Data Captured.')
         return(outputMsg)
 
 
-    # properties
+    # properties and getters.
+    # Note that the default arguments make those functions getters instead of properties
 
     @property
     def fileName(self):
         return self._fileName
 
-    @property
-    def testGuid(self, step=1):
+    def getTestGuid(self, step=1):
         # steps start at 1
         if self._rawData is not None and step >= 1 and step <= len(self._rawData):
             # there is raw data and the step is within range (within the width of a row)
@@ -198,8 +198,7 @@ No Data Captured.')
         else: # no data or step out of range
             return None
 
-    @property
-    def testProgramName(self, step=1):
+    def getTestProgramName(self, step=1):
         # steps start at 1
         if self._rawData is not None and step >= 1 and step <= len(self._rawData):
             # there is raw data and the step is within range (within the width of a row)
@@ -211,8 +210,7 @@ No Data Captured.')
         else: # no data or step out of range
             return None
 
-    @property
-    def testProgramGuid(self, step=1):
+    def getTestProgramGuid(self, step=1):
         # steps start at 1
         if self._rawData is not None and step >= 1 and step <= len(self._rawData):
             # there is raw data and the step is within range (within the width of a row)
@@ -224,8 +222,7 @@ No Data Captured.')
         else: # no data or step out of range
             return None
 
-    @property
-    def operator(self, step=1):
+    def getOperator(self, step=1):
         # steps start at 1
         if self._rawData is not None and step >= 1 and step <= len(self._rawData):
             # there is raw data and the step is within range (within the width of a row)
@@ -237,8 +234,7 @@ No Data Captured.')
         else: # no data or step out of range
             return None
 
-    @property
-    def deviceNumber(self, step=1):
+    def getDeviceNumber(self, step=1):
         # steps start at 1
         if self._rawData is not None and step >= 1 and step <= len(self._rawData):
             # there is raw data and the step is within range (within the width of a row)
@@ -305,8 +301,7 @@ Data not changed.')
 
     # Return a step given a step number. Step number is 1 based.
     # I.e. step = 1 is the 1st step is also self._steps[0]
-    @property
-    def step(self, stepNo):
+    def getStep(self, stepNo):
         step = int(stepNo)
         if step < 1 or step > self._numberOfSteps:
             # invalid step number

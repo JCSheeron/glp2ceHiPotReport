@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Glp2TestDfn.py
+# Glp2TestDfnStep.py
 #
 #
 # TODO: Get values and definitions for step method, and mode. Probably use

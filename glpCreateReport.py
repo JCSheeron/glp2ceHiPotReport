@@ -89,7 +89,8 @@ from Glp2TestData import Glp2TestData
 # NOTE: The helper function MakeTestList in GlpFunctions requires ordered-set
 # which normally needs to be installed.
 from Glp2Functions import MakeTestList, MakePdfDfnStepRow, MakePdfDataStepRow
-from Glp2GraphParse import Glp2GraphParse
+from Glp2Functions import PlotTvsVandI as plotVI
+from Glp2GraphData import Glp2GraphData
 
 # **** argument parsing
 # define the arguments
@@ -103,8 +104,10 @@ a Schleich GLP2-ce Hi Pot Modular Tester. """
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, \
                                  description=descrStr, epilog=eplStr)
-parser.add_argument('outputFile', help= 'Output PDF file name. The .pdf extension \
-will be added to the file name if not specified.')
+parser.add_argument('-of', '--outputFilePrefix', default=None,
+                    help= 'Optional. Output prefix for PDF file names. The .pdf \
+extension will be added to the file name if not specified. If no prefix is specified \
+no output files will be created.')
 parser.add_argument('-d', '--dataFile', default='', metavar='', \
                     help='Input data file (Schleich GLP2-ce file, *.csv). If \
 specified, this data file will be used. If not specified, all *.csv files present \
@@ -141,7 +144,8 @@ args = parser.parse_args()
 
 # At this point, the arguments will be:
 # Argument          Values       Description
-# args.outputFile       string   Output file name. Required.
+# args.outputFilePrefix string   Optional. Output file name prefix. No output
+#                                files are cretated if not specified.
 # args.dataFile         string   Input file name. Optional. Data directory in
 #                                config file will be searched if a file is not
 #                                specified.
@@ -151,7 +155,7 @@ args = parser.parse_args()
 # args.configFile       string   Optional. Default 'config.ini'
 # args.configEncoding   string   Optional. Default 'UTF-8'
 # args.testDfnFile      string   Optional. Test Definition File. If a file is
-#                                not specified, all *.TPR files int the path
+#                                not specified, all *.TPR files in the path
 #                                specified in the config file will be considered.
 # args.testDfnEncoding  string   Optional. Default 'UTF-16'. The tester uses
 #                                UTF-16 encoding when creating these definition
@@ -371,13 +375,13 @@ fnVsDfn=defaultdict(set)
 for tidx, test in enumerate(tests):
     # associate tests with definitions and keep track of orphaned test data and definitions.
     for didx, dfn in enumerate(testDfns):
-        if test.testProgramGuid == dfn.dfnGuid:
+        if test.getTestProgramGuid() == dfn.dfnGuid:
             # match found. Create pair and set the flags.
             prt_tDfn.append((tidx, didx))
             tDfnMatch[tidx] = True
             dfnTMatch[didx] = True
     # populate the file name dictionary
-    fnVsDfn[test.fileName].add(test.testProgramName)
+    fnVsDfn[test.fileName].add(test.getTestProgramName())
 # now convet the list to a tuple
 prt_tDfn = tuple(prt_tDfn)
 
@@ -429,7 +433,7 @@ with the previously run test.\n\nThere is no test definition found for the follo
 
     for testIdx in tNoDef:
         tNoDefMsg += '\n\nFile Name: ' + tests[testIdx].fileName
-        tNoDefMsg += '\n    Program Name: ' + tests[testIdx].testProgramName
+        tNoDefMsg += '\n    Program Name: ' + tests[testIdx].getTestProgramName()
         tNoDefMsg += '\n    Test number: ' + str(tests[testIdx].testInstanceId)
 
 # Make a list of test definition indexes with no test data.
@@ -455,120 +459,121 @@ if args.verbose:
     print(tNoDefMsg)
     print(defNoTMsg)
 
-# Instantiate the extended pdf so headers and footers are available
-fnameData= '__zzqq__tempPdf_dataAssoc__zzqq__.pdf' # not likely to exist and be something else
-# Units are in points (pt)
-dataAssocPdf = cPdf(orientation = 'P', unit = 'pt', format='Letter',
-                    headerText='Test Definition and Test Data Associations')
-# define the nb alias for total page numbers used in footer
-#dataAssocPdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
-dataAssocPdf.set_margins(54, 72, 54) # left, top, right margins (in points)
+# Make the data associaiton pdf if an output prefix is specified.
+if args.outputFilePrefix is not None:
+    fnameData= '__zzqq__tempPdf_dataAssoc__zzqq__.pdf' # not likely to exist and be something else
+    # Units are in points (pt)
+    dataAssocPdf = cPdf(orientation = 'P', unit = 'pt', format='Letter',
+                        headerText='Test Definition and Test Data Associations')
+    # define the nb alias for total page numbers used in footer
+    #dataAssocPdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
+    dataAssocPdf.set_margins(54, 72, 54) # left, top, right margins (in points)
 
-# Set the font for the main content
-# use the bold proportional font
-if dataAssocPdf.fontNames[0] != dataAssocPdf.defaultFontNames[0]:
-    # non-default
-    dataAssocPdf.set_font("regularMono", '', 10)
-else:
-    # default
-    dataAssocPdf.set_font(dataAssocPdf.defaultFontNames[0], '', 10)
+    # Set the font for the main content
+    # use the bold proportional font
+    if dataAssocPdf.fontNames[0] != dataAssocPdf.defaultFontNames[0]:
+        # non-default
+        dataAssocPdf.set_font("regularMono", '', 10)
+    else:
+        # default
+        dataAssocPdf.set_font(dataAssocPdf.defaultFontNames[0], '', 10)
 
-# add the content put into outputMsg above
-dataAssocPdf.add_page() # use ctor params
-dataAssocPdf.multi_cell(w=0, h=13,
-                        txt=fileMsg + dataDfnAssocMsg + tNoDefMsg + defNoTMsg,
-                        border=0, align='L', fill=False)
-dataAssocPdf.output(name = fnameData, dest='F')
+    # add the content put into outputMsg above
+    dataAssocPdf.add_page() # use ctor params
+    dataAssocPdf.multi_cell(w=0, h=13,
+                            txt=fileMsg + dataDfnAssocMsg + tNoDefMsg + defNoTMsg,
+                            border=0, align='L', fill=False)
+    dataAssocPdf.output(name = fnameData, dest='F')
 
-##print('**** Test 0: ****')
-##print('**** Test 0 Step 0: ****')
-##print(tests[0]._steps[0].graphData)
-## **** Parse & Process the graph data
-#grphObject = Glp2GraphParse(tests[0]._steps[0].graphData)
-## print(grphObject)A
-##
-# **** For each (test, test definition) pair, make a pdf of:
+# **** If an output file prefix is specified, for each (test, test definition) 
+# pair, make a pdf of:
 #   The test definition
 #   The test results (tabular)
 #   The test results (graph)
-for tIdx, dfnIdx in prt_tDfn:
-    # Instantiate the extended pdf cVlass and get on with making the pdf
-    # Units are in points (pt)
-    headerText = '{}          {} {}'.format('Test Data','File Name:', tests[tIdx].fileName)
-    pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter', headerText=headerText)
-    # define the nb alias for total page numbers used in footer
-    pdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
-    pdf.set_margins(54, 68, 54) # left, top, right margins (in points)
-    # add a page to be able to add content
-    pdf.add_page() # use ctor params
-    textHeight = pdf.font_size
-    # calc the effective page width, epw, and the 'unit' cell width.
-    # colwidth is somewhat arbitrary, but picked to be a convenient size
-    epw = pdf.w - (pdf.l_margin + pdf.r_margin)
-    colWidth = epw/6.0
-    # create pdf file name from test data file name and use indexes to make it unique
-    # TODO: think of a better file name?
-    fname= 'TestData_' + splitext(tests[tIdx].fileName)[0] + '_' + str(tIdx) + '_' + str(dfnIdx) + '.pdf'
-    # Insert a bold section heading for the definition
-    if pdf.fontNames[3] != pdf.defaultFontNames[3]:
-        # non-default
-        pdf.set_font("boldProp", 'B')
-    else:
-        # default
-        pdf.set_font(pdf.defaultFontNames[3], 'B')
-    pdf.cell(epw, textHeight * 1.2, 'Test Definition', border = 0)
-    # Reset back to regular weight, mono spaced
-    if pdf.fontNames[0] != pdf.defaultFontNames[0]:
-        # non-default
-        pdf.set_font("regularMono", '')
-    else:
-        # default
-        pdf.set_font(pdf.defaultFontNames[0], '')
-    pdf.ln(textHeight)
-    #
-    # test definition data, but include test data file name in the beginning
-    # to help make it clear where/why this definition is being used
-    testDfnMsg  = '\n{} {}'.format('Program Name:', testDfns[dfnIdx].name)
-    testDfnMsg += '\n{} {}'.format('Programmer:', testDfns[dfnIdx].nameOfProgrammer)
-    testDfnMsg += '\n{} {}'.format('File Name:', testDfns[dfnIdx].fileName)
-    testDfnMsg += '\n{} {}\n\n'.format('Comments:', testDfns[dfnIdx].generalComments)
-    # Add the test dfn data to the pdf
-    pdf.multi_cell(w=0, h=13, txt=testDfnMsg, border=0, align='L', fill=False )
-    # add the definition steps to the pdf
-    for step in testDfns[dfnIdx]._steps:
-        MakePdfDfnStepRow(pdf, step)
-    # Test Data
-    # Insert a bold section heading for the test data
-    if pdf.fontNames[3] != pdf.defaultFontNames[3]:
-        # non-default
-        pdf.set_font("boldProp", 'B')
-    else:
-        # default
-        pdf.set_font(pdf.defaultFontNames[3], 'B')
-    pdf.cell(epw, textHeight * 1.2, 'Test Data', border = 0)
-    # Reset back to regular weight, mono spaced
-    if pdf.fontNames[0] != pdf.defaultFontNames[0]:
-        # non-default
-        pdf.set_font("regularMono", '')
-    else:
-        # default
-        pdf.set_font(pdf.defaultFontNames[0], '')
-    pdf.ln(textHeight)
-    testDataMsg  = '\n{} {}'.format('Program Name:', tests[tIdx].testProgramName)
-    testDataMsg += '\n{} {}'.format('Device S/N:', tests[tIdx].deviceNumber)
-    testDataMsg += '\n{} {}\n'.format('Operator:', tests[tIdx].operator)
-    # add the test data to thd pdf
-    pdf.multi_cell(w=0, h=13, txt=testDataMsg, border=0, align='L', fill=False )
-    # add the data steps to the pdf
-    for step in tests[tIdx]._steps:
-        MakePdfDataStepRow(pdf, step)
-    # writ the pdf to a file
-    pdf.output(name = fname, dest='F')
+if args.outputFilePrefix is not None:
+    for tIdx, dfnIdx in prt_tDfn:
+        # Instantiate the extended pdf cVlass and get on with making the pdf
+        # Units are in points (pt)
+        headerText = '{}          {} {}'.format('Test Data','File Name:', tests[tIdx].fileName)
+        pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter', headerText=headerText)
+        # define the nb alias for total page numbers used in footer
+        pdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
+        pdf.set_margins(54, 68, 54) # left, top, right margins (in points)
+        # add a page to be able to add content
+        pdf.add_page() # use ctor params
+        textHeight = pdf.font_size
+        # calc the effective page width, epw, and the 'unit' cell width.
+        # colwidth is somewhat arbitrary, but picked to be a convenient size
+        epw = pdf.w - (pdf.l_margin + pdf.r_margin)
+        colWidth = epw/6.0
+        # create pdf file name from test data file name and use indexes to make it unique
+        # TODO: think of a better file name?
+        fname= 'TestData_' + splitext(tests[tIdx].fileName)[0] + '_' + str(tIdx) + '_' + str(dfnIdx) + '.pdf'
+        # Insert a bold section heading for the definition
+        if pdf.fontNames[3] != pdf.defaultFontNames[3]:
+            # non-default
+            pdf.set_font("boldProp", 'B')
+        else:
+            # default
+            pdf.set_font(pdf.defaultFontNames[3], 'B')
+        pdf.cell(epw, textHeight * 1.2, 'Test Definition', border = 0)
+        # Reset back to regular weight, mono spaced
+        if pdf.fontNames[0] != pdf.defaultFontNames[0]:
+            # non-default
+            pdf.set_font("regularMono", '')
+        else:
+            # default
+            pdf.set_font(pdf.defaultFontNames[0], '')
+        pdf.ln(textHeight)
+        #
+        # test definition data, but include test data file name in the beginning
+        # to help make it clear where/why this definition is being used
+        testDfnMsg  = '\n{} {}'.format('Program Name:', testDfns[dfnIdx].name)
+        testDfnMsg += '\n{} {}'.format('Programmer:', testDfns[dfnIdx].nameOfProgrammer)
+        testDfnMsg += '\n{} {}'.format('File Name:', testDfns[dfnIdx].fileName)
+        testDfnMsg += '\n{} {}\n\n'.format('Comments:', testDfns[dfnIdx].generalComments)
+        # Add the test dfn data to the pdf
+        pdf.multi_cell(w=0, h=13, txt=testDfnMsg, border=0, align='L', fill=False )
+        # add the definition steps to the pdf
+        for step in testDfns[dfnIdx]._steps:
+            MakePdfDfnStepRow(pdf, step)
+        # Test Data
+        # Insert a bold section heading for the test data
+        if pdf.fontNames[3] != pdf.defaultFontNames[3]:
+            # non-default
+            pdf.set_font("boldProp", 'B')
+        else:
+            # default
+            pdf.set_font(pdf.defaultFontNames[3], 'B')
+        pdf.cell(epw, textHeight * 1.2, 'Test Data', border = 0)
+        # Reset back to regular weight, mono spaced
+        if pdf.fontNames[0] != pdf.defaultFontNames[0]:
+            # non-default
+            pdf.set_font("regularMono", '')
+        else:
+            # default
+            pdf.set_font(pdf.defaultFontNames[0], '')
+        pdf.ln(textHeight)
+        testDataMsg  = '\n{} {}'.format('Program Name:', tests[tIdx].testProgramName)
+        testDataMsg += '\n{} {}'.format('Device S/N:', tests[tIdx].deviceNumber)
+        testDataMsg += '\n{} {}\n'.format('Operator:', tests[tIdx].operator)
+        # add the test data to thd pdf
+        pdf.multi_cell(w=0, h=13, txt=testDataMsg, border=0, align='L', fill=False )
+        # add the data steps to the pdf
+        for step in tests[tIdx]._steps:
+            MakePdfDataStepRow(pdf, step)
+        # writ the pdf to a file
+        pdf.output(name = fname, dest='F')
 
-##MakePdfDfnStepRow(pdf, testDfns[0]._steps[0])
-#MakePdfDataStepRow(pdf, tests[0]._steps[0])
-#pdf.output(name = fnameData, dest='F')
-#
+## **** Parse & Process the graph data
+grphObject = Glp2GraphData(tests[0]._steps[0].graphData)
+print(tests[0].fileName)
+plotVI(tData = grphObject.getAxisData(0),
+       vData = grphObject.getAxisData(2),
+       iData = grphObject.getAxisData(1),
+       iThreshold = 0.1)
+
+##
 # TODO: Create a graph (MatPlotLib)
 #
 # TODO: Create a PDF with the text and graph output

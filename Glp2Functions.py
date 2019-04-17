@@ -11,6 +11,7 @@
 from ordered_set import OrderedSet # test ids
 from Glp2TestData import Glp2TestData
 from math import ceil
+import matplotlib.pyplot as plt # for plotting
 
 # Create a list of test data objects from a test data file.
 # The file may contain data for more than one test.
@@ -274,4 +275,92 @@ def MakePdfDataStepRow(pdf, dataStep):
     pdf.cell(colWidth, textHeight, str(dataStep.measuredCurrent), border = 1)
     pdf.ln(textHeight * 3)
 
+# Plot Current and Voltage with Respect to Time.
+# Provide time, voltage, and current data. It is assumed that data is
+# "aligned", such that tData[n] is associated with vData[n] and iData[n].
+def PlotTvsVandI(tData, vData, iData, iThreshold, fileName = None):
+    # get a figure and a single sub-plot to allow better control
+    # than using no sub-plots
+    fig, vAxis = plt.subplots()
+
+    # set the titles
+    fig.suptitle('Current and Voltage versus Time (t)', \
+                fontsize=14, fontweight='bold')
+    plt.title('Plot Title', fontsize=12, fontweight='bold')
+    tColor = 'black'
+    vColor = 'blue'
+    iColor = 'green'
+    thColor = 'red' # threshold color
+    vAxis.set_xlabel('time (s)', color=tColor)
+    vAxis.set_ylabel('Voltage (V)', color=vColor)
+    vAxis.plot(tData, vData, color=vColor)
+    # make additional room for the labels
+    #plt.subplots_adjust(left=0.18, bottom=0.18)
+    #plt.axhline(iThreshold, color=thColor, linewidth = 0.5)
+
+    # make a second y axis for current that shares the same x axis as voltage
+    iAxis = vAxis.twinx()
+    iAxis.set_ylabel('Current (mA?)', color=iColor)
+    iAxis.plot(tData, iData, color=iColor)
+    # plot horizontal line at current threshold
+    iThs = [iThreshold] * len(tData)
+    iAxis.plot(tData, iThs, color=thColor)
+
+    # show the grid
+    vAxis.grid(b=True, which='both', linewidth=0.5, linestyle='-.')
+
+    # put page numbers (3 of 3) in the lower left
+    #txStyle = dict(fontsize=8, color='black', horizontalalignment='left')
+    #plt.text(0.05, 0, 'Page 3 of 3', transform=plt.gcf().transFigure, **txStyle)
+
+    # Save the plot if the outFilePrefix is not empty. If it is empty, don't
+    # save the plot.
+    if fileName is not None:
+        fnamePlot= '__zzqq__GraphPlot.pdf' # not likely to exist and be something else
+        try:
+            # not sure what the possible exceptions are. Take a guess, and raise
+            # in the 'generic' case
+            plt.savefig(fnamePlot, orientation='portrait', papertype='letter',
+                       format='pdf', transparent=False, frameon=False,
+                       bbox_inches='tight', pad_inches=0.25)
+        except IOError as ioe:
+            print('I/O error when saving the plot:')
+            print(ioe)
+        except:
+            print('Unexpcted error saving the plot: ', sys.exc_info()[0])
+            raise
+
+    plt.show()
+#
+#        # Now merge the plot pdf onto the end of the cal data pdf
+#        merger= PdfFileMerger()
+#        try:
+#            fileData= open(fnameData, 'rb')
+#            filePlot= open(fnamePlot, 'rb')
+#            merger.append(PdfFileReader(fileData))
+#            merger.append(PdfFileReader(filePlot))
+#            fname = args.outputFilePrefix + '_' + InstName + '.pdf'
+#            merger.write(fname)
+#            filePlot.close()
+#            fileData.close()
+#            # delete the individual files
+#            if os.path.exists(fnameData):
+#                os.remove(fnameData)
+#            if os.path.exists(fnamePlot):
+#                os.remove(fnamePlot)
+#
+#        except IOError as ioe:
+#            print('I/O error when merging the data and plot files:')
+#            print(ioe)
+#        except:
+#            print('Unexpcted error merging the data and plot files: ', sys.exc_info()[0])
+#            raise
+#
+#    # Draw the plot if the -v option is set. The user will close the plot.
+#    # Otherwise close the plot so it no longer consumes memory
+#    if args.v:
+#        plt.show()
+#    else:
+#        plt.close()
+#
 

@@ -29,7 +29,7 @@ class Glp2TestDfn(object):
             self._fileName = fileName
             self._config = configparser.ConfigParser()
             self._config.read(fileName, fileEncoding)
-            self._numberOfSteps = self._GetNumOfSteps(constants.DFN_STEP_SECTION_PREFIX)
+            self._numberOfSteps = self._getNumOfSteps(constants.DFN_STEP_SECTION_PREFIX)
             # If there are steps defined, process them and create populated
             # test definition step objects.
             # init list of steps to an empty list. It will say empty if there
@@ -59,7 +59,7 @@ class Glp2TestDfn(object):
         outputMsg+= '{:17} {}\n'.format('Number of Steps: ', str(self._numberOfSteps))
         outputMsg+=  '{}\n'.format('Test Steps:')
         for step in self._steps:
-            outputMsg += str(step)
+            outputMsg += str(getStep())
         outputMsg+=  '\n\n{}\n'.format('Entire Test Definition Configuration:')
         for section in self.config:
             outputMsg += '{}\n'.format(section)
@@ -78,7 +78,7 @@ class Glp2TestDfn(object):
         outputMsg+=  '\n{}\n'.format('Test Steps:')
         if self._numberOfSteps > 0:
             for step in self._steps:
-                outputMsg += str(step)
+                outputMsg += str(getStep())
         else:
             outputMsg+= '  No Steps Defined!'
         return(outputMsg)
@@ -87,7 +87,7 @@ class Glp2TestDfn(object):
     # this function will determine how many steps are contained in the
     # test definition. Pass a defaulted setion prefix.
     # It is intended to be used internally to set the _numberOfSteps member
-    def _GetNumOfSteps(self, sectionPrefix=constants.DFN_STEP_SECTION_PREFIX):
+    def _getNumOfSteps(self, sectionPrefix=constants.DFN_STEP_SECTION_PREFIX):
         numOfSteps = 0
         stepNum = 1
         # construct section names and look for them until one isn't found
@@ -155,8 +155,8 @@ class Glp2TestDfn(object):
 
     # Return a step given a step number. Step number is 1 based.
     # I.e. step = 1 is the 1st step is also self._steps[0]
-    @property
-    def step(self, stepNo):
+    # Not a property since it has an argument
+    def getStep(self, stepNo):
         step = int(stepNo)
         if step < 1 or step > self._numberOfSteps:
             # invalid step number
