@@ -117,6 +117,8 @@ No step information captured.')
                                                     str(self.measuredCurrentUnit))
         outputMsg+= '{:21}{}\n\n'.format('Test Step Timestamp: ', self.testTimestamp)
         # print out all the test data. Use the header if it is available
+        # :TODO: :DEBUG:  May not want lengthy header and data. Bypass for now.
+        return(outputMsg)
         if self.header is not None and self.data is not None:
             # both header and data available
             outputMsg += '{}'.format('Header and data available.\n')

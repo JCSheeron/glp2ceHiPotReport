@@ -142,7 +142,7 @@ class Glp2GraphData(object):
     # return a tuple containing the data for the specified axis (zero based).
     def getAxisData(self, axis=0):
         try:
-            return tuple([samples[axis] for samples in self._axisData])
+            return tuple([float(samples[axis]) for samples in self._axisData])
         except IndexError:
             return None
 

@@ -154,10 +154,10 @@ No Data Captured.')
         # Epression that could be used to recreate an object with
         # the same value.'
         outputMsg=  '{:26} {}\n'.format('File Name: ', self.fileName)
-        outputMsg+= '{:26} {}\n'.format('Test Id: ', self.getTestGuid())
-        outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) Name: ', self.testProgramName)
-        outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) GUID: ', self.testProgramGuid)
-        outputMsg+= '{:26} {}\n'.format('Device Number: ', self.deviceNumber)
+        outputMsg+= '{:26} {}\n'.format('Test Id: ', self.getTestGuid)
+        outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) Name: ', self.getTestProgramName)
+        outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) GUID: ', self.getTestProgramGuid)
+        outputMsg+= '{:26} {}\n'.format('Device Number: ', self.getDeviceNumber)
         if self._steps is not None:
             outputMsg+= '\n{:16}\n'.format('Steps: ')
             for step in self._steps:
@@ -168,10 +168,10 @@ No Data Captured.')
         # The goal of __str__ is to create a string representation
         # of the object that is readable to a user (not a programmer).
         outputMsg=  '{:26} {}\n'.format('File Name: ', self.fileName)
-        outputMsg+= '{:26} {}\n'.format('Test Id: ', self.getTestGuid())
-        outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) Name: ', self.testProgramName)
-        outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) GUID: ', self.testProgramGuid)
-        outputMsg+= '{:26} {}\n'.format('Device Number: ', self.deviceNumber)
+        outputMsg+= '{:26} {}\n'.format('Test Id: ', self.getTestGuid)
+        outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) Name: ', self.getTestProgramName)
+        outputMsg+= '{:26} {}\n'.format('Test Dfn (Program) GUID: ', self.getTestProgramGuid)
+        outputMsg+= '{:26} {}\n'.format('Device Number: ', self.getDeviceNumber)
         if self._steps is not None:
             outputMsg+= '\n{:16}\n'.format('Steps: ')
             for step in self._steps:
@@ -186,6 +186,7 @@ No Data Captured.')
     def fileName(self):
         return self._fileName
 
+    @property
     def getTestGuid(self, step=1):
         # steps start at 1
         if self._rawData is not None and step >= 1 and step <= len(self._rawData):
@@ -198,6 +199,7 @@ No Data Captured.')
         else: # no data or step out of range
             return None
 
+    @property
     def getTestProgramName(self, step=1):
         # steps start at 1
         if self._rawData is not None and step >= 1 and step <= len(self._rawData):
@@ -210,6 +212,7 @@ No Data Captured.')
         else: # no data or step out of range
             return None
 
+    @property
     def getTestProgramGuid(self, step=1):
         # steps start at 1
         if self._rawData is not None and step >= 1 and step <= len(self._rawData):
@@ -222,6 +225,7 @@ No Data Captured.')
         else: # no data or step out of range
             return None
 
+    @property
     def getOperator(self, step=1):
         # steps start at 1
         if self._rawData is not None and step >= 1 and step <= len(self._rawData):
@@ -234,6 +238,7 @@ No Data Captured.')
         else: # no data or step out of range
             return None
 
+    @property
     def getDeviceNumber(self, step=1):
         # steps start at 1
         if self._rawData is not None and step >= 1 and step <= len(self._rawData):

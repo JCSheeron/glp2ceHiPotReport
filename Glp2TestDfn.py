@@ -56,10 +56,12 @@ class Glp2TestDfn(object):
         outputMsg=  '\n{:6} {}\n'.format('Name: ', self.name)
         outputMsg+= '{:6} {}\n'.format('Test GUID: ', self.dfnGuid)
         outputMsg+= '{:6} {}\n'.format('General generalComments: ', self.generalComments)
-        outputMsg+= '{:17} {}\n'.format('Number of Steps: ', str(self._numberOfSteps))
+        outputMsg+= '{:17} {}\n'.format('Number of Steps: ', str(self.stepCount))
         outputMsg+=  '{}\n'.format('Test Steps:')
         for step in self._steps:
-            outputMsg += str(getStep())
+            outputMsg += str(step)
+        # :TODO: :DEBUG:  May not want lengthy header and data. Bypass for now.
+        return(outputMsg)
         outputMsg+=  '\n\n{}\n'.format('Entire Test Definition Configuration:')
         for section in self.config:
             outputMsg += '{}\n'.format(section)
@@ -74,11 +76,11 @@ class Glp2TestDfn(object):
         outputMsg+= '{:19} {}\n'.format('Test GUID: ', self.dfnGuid)
         outputMsg+= '{:19} {}\n'.format('General Comments: ', self.generalComments)
         outputMsg+= '{:19} {}\n'.format('Name of Programmer: ', self.nameOfProgrammer)
-        outputMsg+= '{:19} {}\n'.format('Number of Steps: ', str(self._numberOfSteps))
+        outputMsg+= '{:19} {}\n'.format('Number of Steps: ', str(self.stepCount))
         outputMsg+=  '\n{}\n'.format('Test Steps:')
-        if self._numberOfSteps > 0:
+        if self.countSteps > 0:
             for step in self._steps:
-                outputMsg += str(getStep())
+                outputMsg += str(step)
         else:
             outputMsg+= '  No Steps Defined!'
         return(outputMsg)
@@ -145,7 +147,7 @@ class Glp2TestDfn(object):
         self._config.read(newFile, fileEncoding)
 
     @property
-    def StepCount(self):
+    def stepCount(self):
         return self._numberOfSteps
 
     # return the step data set (a tuple)

@@ -11,7 +11,9 @@
 from ordered_set import OrderedSet # test ids
 from Glp2TestData import Glp2TestData
 from math import ceil
+import numpy as np
 import matplotlib.pyplot as plt # for plotting
+import matplotlib.ticker as ticker
 
 # Create a list of test data objects from a test data file.
 # The file may contain data for more than one test.
@@ -182,7 +184,7 @@ def MakePdfDfnStepRow(pdf, dfnStep):
 def MakePdfDataStepRow(pdf, dataStep):
     # calc the effective page width, epw, and the 'unit' cell width.  Somewhat
     # arbitrarily, but also to be consistent with the similar function for
-    # definition steps, there will be a unit cell width based on 6 cells per 
+    # definition steps, there will be a unit cell width based on 6 cells per
     # page width.
     epw = pdf.w - (pdf.l_margin + pdf.r_margin)
     colWidth = epw/6.0
@@ -275,9 +277,55 @@ def MakePdfDataStepRow(pdf, dataStep):
     pdf.cell(colWidth, textHeight, str(dataStep.measuredCurrent), border = 1)
     pdf.ln(textHeight * 3)
 
-# Plot Current and Voltage with Respect to Time.
-# Provide time, voltage, and current data. It is assumed that data is
-# "aligned", such that tData[n] is associated with vData[n] and iData[n].
+# Return a csv string containing the graph data with the following format:
+# Axis0Label (units), Axis1Label (units) ... \n
+# value, value, ... \n
+#
+# Provide the axis definitions, and the axis data.
+# csvString will be overwritten.  It is assumed axisDefs and axisData are tuples
+# to prevent inadvertant changes.
+# The axisDefs is assumed to have this format (tuple of tuples):
+# (
+#   (axis 0 label, axis 0 units, axis 0 color, axis 0 min, axis 0 max, axis 0 formatting),
+#   (axis 1 label, axis 1 units, axis 1 color, axis 1 min, axis 1 max, axis 1 formatting),
+#   ...
+#   )
+def MakeGraphDataCsvFormat(axisDefs, axisData):
+    # Make the csv header
+    # Axis 0 label (axis 0 units), Axis 1 label (axis 1 units) ... \n
+
+    # Make a temp holding spot, and loop thru the axis defs, and create the
+    # csv header row
+    hStr= ''
+    axisLabel = '';
+    for axis in axisDefs:
+        # the label uses odd codes.  Make them user friendly where the
+        # codes are known (emperically determined)
+        if '%%968' == axis[0]:
+            # code for current
+            label= 'current'
+        elif '%%740' == axis[0]:
+            # code for voltate
+            label= 'voltage'
+        else:
+            # no or unknown code. Use label directly.
+            label= axis[0]
+
+        hStr += label + ' (' + axis[1] + '),'
+    # strip off last comma and add a new line
+    hStr= hStr[:-1] + '\n'
+
+    # Make a temp holding spot and loop thru the axis data appending
+    # the data for each row
+    rStr = ''
+    for row in axisData:
+        for value in row:
+            rStr += value + ','
+        # strip off last comma and add a new line
+        rStr= rStr[:-1] + '\n'
+    # add the row data to the header and return
+    return hStr + rStr
+
 def PlotTvsVandI(tData, vData, iData, iThreshold, fileName = None):
     # get a figure and a single sub-plot to allow better control
     # than using no sub-plots
@@ -292,16 +340,19 @@ def PlotTvsVandI(tData, vData, iData, iThreshold, fileName = None):
     iColor = 'green'
     thColor = 'red' # threshold color
     vAxis.set_xlabel('time (s)', color=tColor)
-    vAxis.set_ylabel('Voltage (V)', color=vColor)
+    vAxis.set_ylabel('voltage (V)', color=vColor)
     vAxis.plot(tData, vData, color=vColor)
     # make additional room for the labels
     #plt.subplots_adjust(left=0.18, bottom=0.18)
-    #plt.axhline(iThreshold, color=thColor, linewidth = 0.5)
 
     # make a second y axis for current that shares the same x axis as voltage
     iAxis = vAxis.twinx()
-    iAxis.set_ylabel('Current (mA?)', color=iColor)
+    iAxis.set_ylabel('current (mA)', color=iColor)
     iAxis.plot(tData, iData, color=iColor)
+    # control the current y axis tick marks
+    yMax = max(iData) * 1.01
+    yStep = yMax / 7.0
+    iAxis.yaxis.set_major_locator(ticker.LinearLocator(6))
     # plot horizontal line at current threshold
     iThs = [iThreshold] * len(tData)
     iAxis.plot(tData, iThs, color=thColor)
