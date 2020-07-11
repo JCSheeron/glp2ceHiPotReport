@@ -68,7 +68,7 @@ import matplotlib.pyplot as plt # for plotting
 #import matplotlib.font_manager as fontmgr # for managing fonts
 
 # pdf creation
-from fpdf import FPDF
+# from fpdf import FPDF
 # pdf manipulation
 from PyPDF2 import PdfFileMerger, PdfFileReader
 
@@ -105,22 +105,6 @@ a Schleich GLP2-ce Hi Pot Modular Tester. """
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, \
                                  description=descrStr, epilog=eplStr)
-parser.add_argument('-of', '--outputFilePrefix', default=None,
-                    help= 'Optional. Output prefix for PDF file names. The .pdf \
-extension will be added to the file name if not specified. If no prefix is specified \
-no output files will be created.')
-parser.add_argument('-d', '--dataFile', default='', metavar='', \
-                    help='Input data file (Schleich GLP2-ce file, *.csv). If \
-specified, this data file will be used. If not specified, all *.csv files present \
-in the data_dir path specified in the config directory will be used.')
-parser.add_argument('-de', '--dataFileEncoding', default='UTF-16', metavar='', \
-                    help='Data file encoding. Default is UTF-16.')
-parser.add_argument('-dirPrefix', default='', metavar='', \
-                    help='Directory prefix. If specified, this is prepended to \
-the paths specified in the configuration ini file (default is config.ini). This is \
-helpful if the data is inside directories that are named using serial numbers, \
-dates, times, test numbers, station numbers, or some other dynamic data that is \
-not known when the configuration file is created.')
 parser.add_argument('-c', '--configFile', default='config.ini', metavar='', \
                    help='Config file. Default is config.ini. A list of files \
 may be specified ([\'file1.ini\',\'file2.ini\',...]) if the configuration is \
@@ -129,6 +113,12 @@ information, so if keys are repeated, the key will have the value it had in the 
 last file read.')
 parser.add_argument('-ce', '--configEncoding', default='UTF-8', metavar='', \
                    help='Config file encoding. Default is UTF-8.')
+parser.add_argument('-d', '--dataFile', default='', metavar='', \
+                    help='Input data file (Schleich GLP2-ce file, *.csv). If \
+specified, this data file will be used. If not specified, all *.csv files present \
+in the data_dir path specified in the config directory will be used.')
+parser.add_argument('-de', '--dataFileEncoding', default='UTF-16', metavar='', \
+                    help='Data file encoding. Default is UTF-16.')
 parser.add_argument('-t', '--testDfnFile', default='', metavar='', \
                    help='Test definition file (*.TPR). If specified, this and only \
 this test definition is used. If not specified, all *.TPR files in the test_dfn_dir \
@@ -138,6 +128,27 @@ In the non-specified case, any files present will be searched until the test id 
 in the data is found in one of the test definition files.')
 parser.add_argument('-te', '--testDfnEncoding', default='UTF-16', metavar='', \
                    help='Test definition file encoding. Default is UTF-16.')
+parser.add_argument('-dirPrefix', default='', metavar='', \
+                    help='Directory prefix. If specified, this is prepended to \
+the paths specified in the configuration ini file (default is config.ini). This is \
+helpful if the data is inside directories that are named using serial numbers, \
+dates, times, test numbers, station numbers, or some other dynamic data that is \
+not known when the configuration file is created.')
+parser.add_argument('-of', '--outputFilePrefix', default=None,
+                    help= 'Optional. Default in None. Output file name prefix. \
+The output file names will be: "prefix + test data file name + test index + dfn index"')
+parser.add_argument('-oe', '--outputFileEncoding', default='UTF-8', metavar='', \
+                   help='Output csv file encoding. Default is UTF-8.')
+parser.add_argument('-sf', '--supressDfnPdf', action='store_true', default=False, \
+                    help='Supress test definition information from pdf file.')
+parser.add_argument('-sd', '--supressDataPdf', action='store_true', default=False, \
+                    help='Supress test data information from pdf file.')
+parser.add_argument('-sg', '--supressGraphPdf', action='store_true', default=False, \
+                    help='Supress graph from pdf file.')
+parser.add_argument('-sc', '--supressGraphCsv', action='store_true', default=False, \
+                    help='Supress csv graph data output file.')
+parser.add_argument('-sa', '--supressAssocPdf', action='store_true', default=False, \
+                    help='Supress data association output file.')
 parser.add_argument('-v', '--verbose', action='store_true', default=False, \
                     help='Verbose output, usually used for troubleshooting.')
 # parse the arguments
@@ -145,22 +156,34 @@ args = parser.parse_args()
 
 # At this point, the arguments will be:
 # Argument          Values       Description
-# args.outputFilePrefix string   Optional. Output file name prefix. No output
-#                                files are cretated if not specified.
+# args.configFile       string   Optional. Default 'config.ini'
+# args.configEncoding   string   Optional. Default 'UTF-8'
 # args.dataFile         string   Input file name. Optional. Data directory in
 #                                config file will be searched if a file is not
 #                                specified.
-# args.dataFileEncoding string   Optional. Default is UTF-16
-# args.dirPrefix        string   Optional. Prepended to directory path specified
-#                                in config file.
-# args.configFile       string   Optional. Default 'config.ini'
-# args.configEncoding   string   Optional. Default 'UTF-8'
+# args.dataFileEncoding string   Optional. Default is UTF-16. The tester uses
+#                                UTF-16 encoding when creating these data files.
 # args.testDfnFile      string   Optional. Test Definition File. If a file is
 #                                not specified, all *.TPR files in the path
 #                                specified in the config file will be considered.
-# args.testDfnEncoding  string   Optional. Default 'UTF-16'. The tester uses
+# args.testDfnEncoding  string   Optional. Default UTF-16. The tester uses
 #                                UTF-16 encoding when creating these definition
 #                                files.
+# args.dirPrefix        string   Optional. Prepended to directory paths specified
+#                                in config file.
+# args.outputFilePrefix string   Optional. Output file name prefix.
+# args.outputFileEncoding string Optional. Default UTF-8. Encoding used for csv
+#                                file output.
+# args.supressDfnPdf    True/False default False. Do not include definition in
+#                                  pdf if true
+# args.supressDataPdf   True/False default False. Do not include data in
+#                                  pdf if true
+# args.supressGraphPdf  True/False default False. Do not include graph in
+#                                  pdf if true
+# args.supressGraphCsv  True/False default False. Do not create csv graph
+#                                  file if true
+# args.supressAssocPdf True/False default False. Do not create data association
+#                                  pdf if true
 # args.verbose          True/False, default False. Increase output messages.
 
 # Put the begin mark here, after the arg parsing, so argument problems are
@@ -168,6 +191,8 @@ args = parser.parse_args()
 print('**** Begin Processing ****')
 # get start processing time
 procStart = datetime.now()
+# create a string for use in file names below
+fileId = procStart.strftime('%m%d%Y%H%M%S')
 print('    Process start time: ' + procStart.strftime('%m/%d/%Y %H:%M:%S'))
 
 # **** Get config info from config file
@@ -292,7 +317,7 @@ elif args.dataFile != '' and args.dataFile is not None and args.dataFile in test
     # the message for use in the pdf (later).
     # This message will be printed as part of the verbose output also, so only print it here if
     # verbose is not selected.
-    partMsg = '\n\nSpecified test data file \'' + args.dataFile + '\' was found and is being used.'
+    partMsg = '\n\nSpecified test data file \'' + args.dataFile + '\' was found and is being used.\n'
     fileMsg += partMsg
     if not args.verbose:
         print(partMsg)
@@ -364,7 +389,10 @@ prt_tDfn=[]
 # Also keep track of test data without a test definition, and for test
 # definitions for which there is no data. (tDfnMatch and dfnTMatch)
 # Init a list where the index position represents a test or definition index position.
-# After the loop, any False values are indexes without matches
+# After the loop, any False values are indexes without matches.
+# For tests, where there is a match to a test definition, the false will be replaced with 
+# a test definition index.
+# For definitions, were a match is made to a test, the position is set to true.
 tDfnMatch=[False] * len(tests) # list of test data <-> test definition matches by position
 dfnTMatch=[False] * len(testDfns) # list of test definition <-> test data matches by position
 # Lastly, for informational (display) purposes, make a list of test definitions used
@@ -379,7 +407,7 @@ for tidx, test in enumerate(tests):
         if test.getTestProgramGuid == dfn.dfnGuid:
             # match found. Create pair and set the flags.
             prt_tDfn.append((tidx, didx))
-            tDfnMatch[tidx] = True
+            tDfnMatch[tidx] = didx
             dfnTMatch[didx] = True
     # populate the file name dictionary
     fnVsDfn[test.fileName].add(test.getTestProgramName)
@@ -457,6 +485,20 @@ definitions are not used in any of the test data:'
         defNoTMsg += '\n    Definition Name: ' + testDfns[defIdx].name
         defNoTMsg += '\n    Programmer: ' + testDfns[defIdx].nameOfProgrammer
 
+# Troubleshooting printing
+#print('tests')
+#print(tests)
+#print('prt_tDfn')
+#print(prt_tDfn)
+#print('tDfnMatch')
+#print(tDfnMatch)
+# print('test0')
+# print(tests[0])
+#print('tNoDef')
+#print(tNoDef)
+#print('defNoT')
+#print(defNoT)
+
 # **** Put the information about test definitions and test data associations in
 # a pdf.
 # First print it to the terminal if verbose argument is used.
@@ -466,14 +508,15 @@ if args.verbose:
         print(tNoDefMsg)
     print(defNoTMsg)
 
-# Make the data associaiton pdf if an output prefix is specified.
-if args.outputFilePrefix is not None:
-    fnameData= '__zzqq__tempPdf_dataAssoc__zzqq__.pdf' # not likely to exist and be something else
+# Make the data associaiton pdf if not supressed.
+if not args.supressAssocPdf:
+    # embed datetime to make file unique
+    fname= 'testDataFileAssocitions_' + fileId + '.pdf'
     # Units are in points (pt)
     dataAssocPdf = cPdf(orientation = 'P', unit = 'pt', format='Letter',
                         headerText='Test Definition and Test Data Associations')
     # define the nb alias for total page numbers used in footer
-    #dataAssocPdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
+    dataAssocPdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
     dataAssocPdf.set_margins(54, 72, 54) # left, top, right margins (in points)
 
     # Set the font for the main content
@@ -490,44 +533,47 @@ if args.outputFilePrefix is not None:
     dataAssocPdf.multi_cell(w=0, h=13,
                             txt=fileMsg + dataDfnAssocMsg + tNoDefMsg + defNoTMsg,
                             border=0, align='L', fill=False)
-    dataAssocPdf.output(name = fnameData, dest='F')
+    dataAssocPdf.output(name = fname, dest='F')
 
-# **** If an output file prefix is specified, for each (test, test definition)
-# pair, make a pdf of:
-#   The test definition
+# **** For each test, make a pdf of:
+#   The test definition (when available)
 #   The test results (tabular)
 #   The test results (graph)
-if args.outputFilePrefix is not None:
-    if prt_tDfn:
+# Look at the supression arguments to decide what to include in the pdf
+if not (args.supressDfnPdf and args.supressDataPdf and args.supressGraphPdf):
+    # at least one of the sections is not suppressed: Definition, Data, and/or graph
+    for tIdx, test in enumerate(tests): # enumerate to get indexes
+        # *** Setup pdf object and file name
+        # Instantiate the extended pdf class and get on with making the pdf
+        # Units are in points (pt)
+        headerText = '{}    {} {}'.format('Test Data','File Name:', test.fileName)
+        pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter', headerText=headerText)
+        # define the nb alias for total page numbers used in footer
+        pdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
+        pdf.set_margins(54, 68, 54) # left, top, right margins (in points)
+        # add a page to be able to add content
+        pdf.add_page() # use ctor params
+        textHeight = pdf.font_size
+        # calc the effective page width, epw, and the 'unit' cell width.
+        # colwidth is somewhat arbitrary, but picked to be a convenient size
+        epw = pdf.w - (pdf.l_margin + pdf.r_margin)
+        colWidth = epw/6.0
+        # Create file name from test data.
+        # Exclude the extension so the same file name will accomodate the pdf and csv.
+        # Use the prefix if one was specified.
+        if args.outputFilePrefix is not None:
+            fname= args.outputFilePrefix + splitext(test.fileName)[0] + '_' + str(tIdx)
+        else:
+            # no prefix specified
+            fname= splitext(tests[tIdx].fileName)[0] + '_' + str(tIdx)
 
-        print('****##')
-        print(prt_tDfn)
-        # prt_tDfn is a tuple of tuples
-        # ( (test index, definition index) ... () )
-        for tIdx, dfnIdx in prt_tDfn:
-            # Instantiate the extended pdf cVlass and get on with making the pdf
-            # Units are in points (pt)
-            headerText = '{}    {} {}'.format('Test Data','File Name:', tests[tIdx].fileName)
-            pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter', headerText=headerText)
-            # define the nb alias for total page numbers used in footer
-            pdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
-            pdf.set_margins(54, 68, 54) # left, top, right margins (in points)
-            # add a page to be able to add content
-            pdf.add_page() # use ctor params
-            textHeight = pdf.font_size
-            # calc the effective page width, epw, and the 'unit' cell width.
-            # colwidth is somewhat arbitrary, but picked to be a convenient size
-            epw = pdf.w - (pdf.l_margin + pdf.r_margin)
-            colWidth = epw/6.0
-            # Create file name from test data file name and use indexes to make it unique.
-            # Exclude the extension so the same file name will accomodate the pdf and csv.
-            # TODO: think of a better file name?
-            if args.outputFilePrefix is not None:
-                fname= args.outputFilePrefix + splitext(tests[tIdx].fileName)[0] + '_' + str(tIdx) + '_' + str(dfnIdx)
-            else:
-                # no prefix specified
-                fname= splitext(tests[tIdx].fileName)[0] + '_' + str(tIdx) + '_' + str(dfnIdx)
+        # *** Definition information
+        # Create a definition section unless it is supressed
+        # Include test definition data or a messages saying there isn't any
+        if not args.supressDfnPdf:
             # Insert a bold section heading for the definition
+            # Do this even if supressed so there is at least a place to
+            # state there is no definition available.
             if pdf.fontNames[3] != pdf.defaultFontNames[3]:
                 # non-default
                 pdf.set_font("boldProp", 'B')
@@ -543,20 +589,39 @@ if args.outputFilePrefix is not None:
                 # default
                 pdf.set_font(pdf.defaultFontNames[0], '')
             pdf.ln(textHeight)
-            #
-            # test definition data, but include test data file name in the beginning
-            # to help make it clear where/why this definition is being used
-            testDfnMsg  = '\n{} {}'.format('Program Name:', testDfns[dfnIdx].name)
-            testDfnMsg += '\n{} {}'.format('Programmer:', testDfns[dfnIdx].nameOfProgrammer)
-            testDfnMsg += '\n{} {}'.format('File Name:', testDfns[dfnIdx].fileName)
-            testDfnMsg += '\n{} {}\n\n'.format('Comments:', testDfns[dfnIdx].generalComments)
-            # Add the test dfn data to the pdf
-            pdf.multi_cell(w=0, h=13, txt=testDfnMsg, border=0, align='L', fill=False )
-            # add the definition steps to the pdf
-            for step in testDfns[dfnIdx]._steps:
-                MakePdfDfnStepRow(pdf, step)
-            # Test Data
-            pdf.add_page() # use ctor params
+
+            # A list of test definition objects is stored in the testDfns,
+            # and the index to the matching definition for the current test
+            # is stored in tDfnMatch. So testDfns[tDfnMatch[tIdx]] is how
+            # the definition details are obtained.
+            if not tDfnMatch[tIdx]:
+                # There is no definition information available for this test.
+                # State that, and then done with dfn section.
+                testDfnMsg  = '\nThere is no definition information available for this test.\n'
+                print(testDfnMsg)
+                # Add the test dfn data to the pdf
+                pdf.multi_cell(w=0, h=13, txt=testDfnMsg, border=0, align='L', fill=False )
+            else:
+                # Include test data file name in the beginning
+                # to help make it clear where/why this definition is being used
+                testDfnMsg  = '\n{} {}'.format('Program Name:', testDfns[tDfnMatch[tIdx]].name)
+                testDfnMsg += '\n{} {}'.format('Programmer:', testDfns[tDfnMatch[tIdx]].nameOfProgrammer)
+                testDfnMsg += '\n{} {}'.format('File Name:', testDfns[tDfnMatch[tIdx]].fileName)
+                testDfnMsg += '\n{} {}\n\n'.format('Comments:', testDfns[tDfnMatch[tIdx]].generalComments)
+                # Add the test dfn data to the pdf
+                pdf.multi_cell(w=0, h=13, txt=testDfnMsg, border=0, align='L', fill=False )
+                # add the definition steps to the pdf
+                for step in testDfns[tDfnMatch[tIdx]]._steps:
+                    MakePdfDfnStepRow(pdf, step)
+
+            # if there is another section, add a new page
+            if not (args.supressDataPdf and args.supressGraphPdf):
+                pdf.add_page() # use ctor params
+
+
+        # *** Test data information
+        # Create a data section unless it is supressed
+        if not args.supressDataPdf:
             # Insert a bold section heading for the test data
             if pdf.fontNames[3] != pdf.defaultFontNames[3]:
                 # non-default
@@ -573,38 +638,75 @@ if args.outputFilePrefix is not None:
                 # default
                 pdf.set_font(pdf.defaultFontNames[0], '')
             pdf.ln(textHeight)
-            testDataMsg  = '\n{} {}'.format('Program Name:', tests[tIdx].getTestProgramName)
-            testDataMsg += '\n{} {}'.format('Device S/N:', tests[tIdx].getDeviceNumber)
-            testDataMsg += '\n{} {}\n'.format('Operator:', tests[tIdx].getOperator)
+            testDataMsg  = '\n{} {}'.format('Program Name:', test.getTestProgramName)
+            testDataMsg += '\n{} {}'.format('Device S/N:', test.getDeviceNumber)
+            testDataMsg += '\n{} {}\n'.format('Operator:', test.getOperator)
             # add the test data to thd pdf
             pdf.multi_cell(w=0, h=13, txt=testDataMsg, border=0, align='L', fill=False )
             # add the data steps to the pdf
-            for step in tests[tIdx]._steps:
+            for step in test._steps:
                 MakePdfDataStepRow(pdf, step)
-            # write the pdf to a file
-            pdf.output(name = fname + '.pdf', dest='F')
 
-            # Create a csv text file with the graph data, unless it is suppressed
-            # Use a graphObject to process the graph data
-            testDataMsg  = '\n{} {}'.format('Program Name:', tests[tIdx].getTestProgramName)
-            testDataMsg += '\n{} {}'.format('Device S/N:', tests[tIdx].getDeviceNumber)
-            testDataMsg += '\n{} {}\n\n'.format('Operator:', tests[tIdx].getOperator)
-            grphObject = Glp2GraphData(tests[tIdx]._steps[0].graphData)
+            # if there is another section, add a new page
+            if not args.supressGraphPdf:
+                pdf.add_page() # use ctor params
+
+        # write the pdf to a file
+        # Use a temporary file. If not supressed, the graph will
+        # be created in s separate pdf, and then merged with this file
+        # into the final file. This file can then be deleted.
+        pfname = '__zzqq__' + fname + '.pdf' # unlikely to exist and be something else
+        print('Writing the test data to a temporary pdf file: ' + pfname)
+        pdf.output(name = pfname, dest='F') # also closes the file
+
+        # *** Graph data.
+        # We use the graph data to make a plot, and also export it to a csv
+        # to make it available for other uses.
+        # Process the graph data unless both the pdf section and the csv output
+        # are supressed.
+        if not (args.supressGraphPdf and args.supressGraphCsv):
+            # Process the data for each step. Make a header for the csv file, and
+            # then use a graphObject to process the graph data for each step
+                for step in test._steps:
+                    # Make the csv header
+                    testDataMsg = '\n{} {}'.format('Program Name:', test.getTestProgramName)
+                    testDataMsg += '\n{} {}'.format('Device S/N:', test.getDeviceNumber)
+                    testDataMsg += '\n{} {}\n\n'.format('Operator:', test.getOperator)
+                    # graph data for each step
+                    grphObject = Glp2GraphData(step.graphData)
+                    testDataMsg += MakeGraphDataCsvFormat(grphObject.axisDefinitions, grphObject.axesData)
+
+                    # Create a csv text file with the graph data, unless it is suppressed
+                    if not args.supressGraphCsv:
+                        # Write the data to a file.
+                        # Since it is already formatted as a csv file, the csvWriter isn't needed.
+                        # It can be written as a text file with a csv extension
+                        cfname = fname + '_' + str(step.stepNumber) + '.csv' # csv file name
+                        print('Writing the graph data to a csv file: ' + cfname)
+                        # create a new file for writing, deleting any existing version
+                        try:
+                            outFile = open(cfname, 'w', encoding=args.outputFileEncoding)
+                        except ValueError as ve:
+                            print('ERROR opening the graph data csv file. Nothing written.')
+                            print(ve)
+
+                        try:
+                            outFile.write(testDataMsg)
+                            outFile.close()
+                        except ValueError as ve:
+                            print('ERROR writing the graph data to a csv file. Nothing written.')
+                            print(ve)
+
+                    # Create a graph pdf and merge it in with the existing pdf if not supressed
+                    if not args.supressGraphPdf:
+                        plotVI(tData = grphObject.getAxisData(0),
+                                vData = grphObject.getAxisData(2),
+                                iData = grphObject.getAxisData(1),
+                                iThreshold = 0.03,
+                                fileNameExisting = pfname,
+                                fileNameDest = fname + '.pdf')
 
 
-
-
-## **** Parse & Process the graph data
-grphObject = Glp2GraphData(tests[0]._steps[0].graphData)
-csvStr=''
-csvStr = MakeGraphDataCsvFormat(grphObject.axisDefinitions, grphObject.axesData)
-print(grphObject.axisDefinitions)
-print(csvStr)
-# plotVI(tData = grphObject.getAxisData(0),
-       # vData = grphObject.getAxisData(2),
-       # iData = grphObject.getAxisData(1),
-       # iThreshold = 0.03,
-       # fileName = 'Billiam')
 
 
 # get end processing time

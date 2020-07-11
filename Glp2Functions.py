@@ -8,17 +8,21 @@
 # These functions are defined here to help keep the main code 'cleaner'.
 #
 # imports
+from sys import exc_info # error reporting
 from ordered_set import OrderedSet # test ids
 from Glp2TestData import Glp2TestData
 from math import ceil
-import numpy as np
+# import numpy as np
 import matplotlib.pyplot as plt # for plotting
 import matplotlib.ticker as ticker
+# pdf manipulation
+from PyPDF2 import PdfFileMerger, PdfFileReader
+
 
 # Create a list of test data objects from a test data file.
 # The file may contain data for more than one test.
 # It is expected this data will be a list of lists:  Each test step will be a
-# list of values, and each test will represented as a list of rows. Each row
+# list of values, and each test will represented as a list of rows. Each rowG
 # has a test GUID. This GUID is unique for each test, so all the rows (steps)
 # with a particular id will be contained in a single test data object.
 # Return a list of test data objects (Glp2TestData objects), with each object
@@ -326,7 +330,9 @@ def MakeGraphDataCsvFormat(axisDefs, axisData):
     # add the row data to the header and return
     return hStr + rStr
 
-def PlotTvsVandI(tData, vData, iData, iThreshold, fileName = None):
+# Create a plot and merge it into the existing pdf file.
+# The resulting file will be the original pdf with the plot appended
+def PlotTvsVandI(tData, vData, iData, iThreshold, showPlot=False, fileNameExisting=None, fileNameDest=None):
     # get a figure and a single sub-plot to allow better control
     # than using no sub-plots
     fig, vAxis = plt.subplots()
@@ -366,7 +372,7 @@ def PlotTvsVandI(tData, vData, iData, iThreshold, fileName = None):
 
     # Save the plot if the outFilePrefix is not empty. If it is empty, don't
     # save the plot.
-    if fileName is not None:
+    if fileNameExisting is not None and fileNameDest is not None:
         fnamePlot= '__zzqq__GraphPlot.pdf' # not likely to exist and be something else
         try:
             # not sure what the possible exceptions are. Take a guess, and raise
@@ -381,37 +387,34 @@ def PlotTvsVandI(tData, vData, iData, iThreshold, fileName = None):
             print('Unexpcted error saving the plot: ', sys.exc_info()[0])
             raise
 
-    plt.show()
-#
-#        # Now merge the plot pdf onto the end of the cal data pdf
-#        merger= PdfFileMerger()
-#        try:
-#            fileData= open(fnameData, 'rb')
-#            filePlot= open(fnamePlot, 'rb')
-#            merger.append(PdfFileReader(fileData))
-#            merger.append(PdfFileReader(filePlot))
-#            fname = args.outputFilePrefix + '_' + InstName + '.pdf'
-#            merger.write(fname)
-#            filePlot.close()
-#            fileData.close()
-#            # delete the individual files
-#            if os.path.exists(fnameData):
-#                os.remove(fnameData)
-#            if os.path.exists(fnamePlot):
-#                os.remove(fnamePlot)
-#
-#        except IOError as ioe:
-#            print('I/O error when merging the data and plot files:')
-#            print(ioe)
-#        except:
-#            print('Unexpcted error merging the data and plot files: ', sys.exc_info()[0])
-#            raise
-#
-#    # Draw the plot if the -v option is set. The user will close the plot.
-#    # Otherwise close the plot so it no longer consumes memory
-#    if args.v:
-#        plt.show()
-#    else:
-#        plt.close()
-#
+        # Now merge the plot pdf onto the end of the cal data pdf
+        merger= PdfFileMerger()
+        try:
+           fileExisting= open(fileNameExisting, 'rb')
+           filePlot= open(fnamePlot, 'rb')
+           merger.append(PdfFileReader(fileExisting))
+           merger.append(PdfFileReader(filePlot))
+           merger.write(fileNameDest)
+           filePlot.close()
+           fileExisting.close()
+           # delete the individual files
+           # if os.path.exists(fnameData):
+               # os.remove(fnameData)
+           # if os.path.exists(fnamePlot):
+               # os.remove(fnamePlot)
+
+        except IOError as ioe:
+            print('I/O error when merging the data and plot files:')
+            print(ioe)
+        except:
+            print('Unexpcted error merging the data and plot files: ', exc_info()[0])
+            raise
+
+    # Show the plot if specified. The user will need to close the plot.
+    # Otherwise close the plot so it no longer consumes memory
+    if showPlot:
+        plt.show()
+    else:
+        plt.close()
+
 
