@@ -91,6 +91,7 @@ from Glp2TestData import Glp2TestData
 from Glp2Functions import MakeTestList, MakePdfDfnStepRow, MakePdfDataStepRow
 from Glp2Functions import MakeGraphDataCsvFormat
 from Glp2Functions import PlotTvsVandI as plotVI
+from Glp2Functions import MergePdf
 from Glp2GraphData import Glp2GraphData
 
 # **** argument parsing
@@ -651,13 +652,13 @@ if not (args.supressDfnPdf and args.supressDataPdf and args.supressGraphPdf):
             if not args.supressGraphPdf:
                 pdf.add_page() # use ctor params
 
-        # write the pdf to a file
+        # Write the test data to a pdf file.
         # Use a temporary file. If not supressed, the graph will
-        # be created in s separate pdf, and then merged with this file
+        # be created in a separate pdf, and then merged with this file
         # into the final file. This file can then be deleted.
-        pfname = '__zzqq__' + fname + '.pdf' # unlikely to exist and be something else
+        pfname = '__zzqq__' + fname # temp file name unlikely to exist and be something else
         print('Writing the test data to a temporary pdf file: ' + pfname)
-        pdf.output(name = pfname, dest='F') # also closes the file
+        pdf.output(name = pfname + '.pdf', dest='F') # also closes the file
 
         # *** Graph data.
         # We use the graph data to make a plot, and also export it to a csv
@@ -697,16 +698,22 @@ if not (args.supressDfnPdf and args.supressDataPdf and args.supressGraphPdf):
                             print('ERROR writing the graph data to a csv file. Nothing written.')
                             print(ve)
 
-                    # Create a graph pdf and merge it in with the existing pdf if not supressed
+                    # Create a graph pdf and merge it in with the existing pdf if not supress
                     if not args.supressGraphPdf:
-                        plotVI(tData = grphObject.getAxisData(0),
-                                vData = grphObject.getAxisData(2),
-                                iData = grphObject.getAxisData(1),
-                                iThreshold = 0.03,
-                                fileNameExisting = pfname,
-                                fileNameDest = fname + '.pdf')
-
-
+                        # temp file name unlikely to exist and be something elseed
+                        gfname = '__zzqq__graph_' + fname + '_' + str(step.stepNumber) + '.pdf'
+                        print('Writing the graph to a temporary pdf file: ' + gfname)
+                        plotVI(tData=grphObject.getAxisData(0),
+                            vData=grphObject.getAxisData(2),
+                            iData=grphObject.getAxisData(1),
+                            iThreshold=0.03,
+                            showPlot=False,
+                            fileName=gfname)
+                        # Now merge the data pdf file and the graph pdf file
+                        MergePdf(fileNameSrc1=pfname,
+                                fileNameSrc2=gfname,
+                                fileNameDest=pfname + '666.pdf',
+                                deleteSrcFiles=False)
 
 
 # get end processing time

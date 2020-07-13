@@ -330,9 +330,8 @@ def MakeGraphDataCsvFormat(axisDefs, axisData):
     # add the row data to the header and return
     return hStr + rStr
 
-# Create a plot and merge it into the existing pdf file.
-# The resulting file will be the original pdf with the plot appended
-def PlotTvsVandI(tData, vData, iData, iThreshold, showPlot=False, fileNameExisting=None, fileNameDest=None):
+# Create a plot and make a pdf using the specified file name, if specified.
+def PlotTvsVandI(tData, vData, iData, iThreshold, showPlot=False, fileName=None):
     # get a figure and a single sub-plot to allow better control
     # than using no sub-plots
     fig, vAxis = plt.subplots()
@@ -372,12 +371,11 @@ def PlotTvsVandI(tData, vData, iData, iThreshold, showPlot=False, fileNameExisti
 
     # Save the plot if the outFilePrefix is not empty. If it is empty, don't
     # save the plot.
-    if fileNameExisting is not None and fileNameDest is not None:
-        fnamePlot= '__zzqq__GraphPlot.pdf' # not likely to exist and be something else
+    if fileName is not None:
         try:
             # not sure what the possible exceptions are. Take a guess, and raise
             # in the 'generic' case
-            plt.savefig(fnamePlot, orientation='portrait', papertype='letter',
+            plt.savefig(fileName, orientation='portrait', papertype='letter',
                        format='pdf', transparent=False, frameon=False,
                        bbox_inches='tight', pad_inches=0.25)
         except IOError as ioe:
@@ -387,29 +385,6 @@ def PlotTvsVandI(tData, vData, iData, iThreshold, showPlot=False, fileNameExisti
             print('Unexpcted error saving the plot: ', sys.exc_info()[0])
             raise
 
-        # Now merge the plot pdf onto the end of the cal data pdf
-        merger= PdfFileMerger()
-        try:
-           fileExisting= open(fileNameExisting, 'rb')
-           filePlot= open(fnamePlot, 'rb')
-           merger.append(PdfFileReader(fileExisting))
-           merger.append(PdfFileReader(filePlot))
-           merger.write(fileNameDest)
-           filePlot.close()
-           fileExisting.close()
-           # delete the individual files
-           # if os.path.exists(fnameData):
-               # os.remove(fnameData)
-           # if os.path.exists(fnamePlot):
-               # os.remove(fnamePlot)
-
-        except IOError as ioe:
-            print('I/O error when merging the data and plot files:')
-            print(ioe)
-        except:
-            print('Unexpcted error merging the data and plot files: ', exc_info()[0])
-            raise
-
     # Show the plot if specified. The user will need to close the plot.
     # Otherwise close the plot so it no longer consumes memory
     if showPlot:
@@ -417,4 +392,39 @@ def PlotTvsVandI(tData, vData, iData, iThreshold, showPlot=False, fileNameExisti
     else:
         plt.close()
 
+# Merge (append) pdf source 2 to the end of pdf source 1, and save the result in the
+# destination file. Delete the source files if option is specified.
+def MergePdf(fileNameSrc1, fileNameSrc2, fileNameDest, deleteSrcFiles=False ):
+
+    # Now merge the plot pdf onto the end of the cal data pdf
+    merger= PdfFileMerger()
+    try:
+       src1= open(fileNameSrc1, 'rb')
+       src2= open(fileNameSrc2, 'rb')
+       merger.append(PdfFileReader(src1))
+       merger.append(PdfFileReader(src2))
+       src1.close()
+       src2.close()
+       merger.write(fileNameDest)
+       merger.close()
+
+    except IOError as ioe:
+        print('I/O error when merging the data and plot files:')
+        print(ioe)
+    except:
+        print('Unexpcted error merging the data and plot files: ', exc_info()[0])
+        raise
+
+    # Delete the source files if specified
+    if deleteSrcFiles:
+        try:
+            # delete the individual files
+            if os.path.exists(fileNameSrc1):
+                os.remove(fileNameSrc1)
+            if os.path.exists(fileNameSrc2):
+                os.remove(fileNameSrc2)
+
+        except:
+            print('Unexpcted error when deleting files in MergePdf(): ', exc_info()[0])
+            raise
 

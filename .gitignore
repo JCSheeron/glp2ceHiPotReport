@@ -16,3 +16,7 @@ __pycache__/
 # ignore the orig files created by vim
 *.orig
 
+# ignore the .csv and .pdf (output) files
+*.csv
+*.pdf
+
