@@ -391,7 +391,7 @@ prt_tDfn=[]
 # definitions for which there is no data. (tDfnMatch and dfnTMatch)
 # Init a list where the index position represents a test or definition index position.
 # After the loop, any False values are indexes without matches.
-# For tests, where there is a match to a test definition, the false will be replaced with 
+# For tests, where there is a match to a test definition, the false will be replaced with
 # a test definition index.
 # For definitions, were a match is made to a test, the position is set to true.
 tDfnMatch=[False] * len(tests) # list of test data <-> test definition matches by position
@@ -706,13 +706,15 @@ if not (args.supressDfnPdf and args.supressDataPdf and args.supressGraphPdf):
                         plotVI(tData=grphObject.getAxisData(0),
                             vData=grphObject.getAxisData(2),
                             iData=grphObject.getAxisData(1),
-                            iThreshold=0.03,
+                            iThreshold=step.currentLimit,
+                            iMax=step.measuredCurrent,
+                            title=fname + ' Step ' + str(step.stepNumber),
                             showPlot=False,
                             fileName=gfname)
                         # Now merge the data pdf file and the graph pdf file
-                        MergePdf(fileNameSrc1=pfname,
+                        MergePdf(fileNameSrc1=pfname + '.pdf',
                                 fileNameSrc2=gfname,
-                                fileNameDest=pfname + '666.pdf',
+                                fileNameDest=pfname + '.pdf',
                                 deleteSrcFiles=False)
 
 

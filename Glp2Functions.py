@@ -156,12 +156,12 @@ def MakePdfDfnStepRow(pdf, dfnStep):
         # default
         pdf.set_font(pdf.defaultFontNames[1], '')
 
-    pdf.cell(colWidth, textHeight, 'Test Volt.', border = 1)
-    pdf.cell(colWidth, textHeight, 'I Range', border = 1)
-    pdf.cell(colWidth, textHeight, 'I Limit', border = 1)
-    pdf.cell(colWidth, textHeight, 'Test Time', border = 1)
-    pdf.cell(colWidth, textHeight, 'Ramp Time', border = 1)
-    pdf.cell(colWidth, textHeight, 'Delay Time', border = 1)
+    pdf.cell(colWidth, textHeight, 'V Test (V)', border = 1)
+    pdf.cell(colWidth, textHeight, 'I Range (mA)', border = 1)
+    pdf.cell(colWidth, textHeight, 'I Limit (mA)', border = 1)
+    pdf.cell(colWidth, textHeight, 'Test Time (s)', border = 1)
+    pdf.cell(colWidth, textHeight, 'Ramp Time (s)', border = 1)
+    pdf.cell(colWidth, textHeight, 'Delay Time (s)', border = 1)
     pdf.ln(textHeight)
 
     # print the 6th row: values (regular weight)
@@ -191,7 +191,7 @@ def MakePdfDataStepRow(pdf, dataStep):
     # definition steps, there will be a unit cell width based on 6 cells per
     # page width.
     epw = pdf.w - (pdf.l_margin + pdf.r_margin)
-    colWidth = epw/6.0
+    colWidth = epw/12.0
     # text height
     textHeight = pdf.font_size
     # font order is mono regular, mono bold, proportional regular, proportional bold
@@ -206,7 +206,7 @@ def MakePdfDataStepRow(pdf, dataStep):
         pdf.set_font(pdf.defaultFontNames[1], '')
 
     pdf.cell(colWidth, textHeight, 'Step', border = 1)
-    pdf.cell(colWidth * 3, textHeight, 'Timestamp', border = 1)
+    pdf.cell(colWidth * 9, textHeight, 'Timestamp', border = 1)
     pdf.ln(textHeight)
 
     # print the 2nd row, a value row (regular weight)
@@ -219,7 +219,7 @@ def MakePdfDataStepRow(pdf, dataStep):
         pdf.set_font(pdf.defaultFontNames[0], '')
 
     pdf.cell(colWidth, textHeight, str(dataStep.stepNumber), border = 1)
-    pdf.cell(colWidth * 3, textHeight, str(dataStep.testTimestamp), border = 1)
+    pdf.cell(colWidth * 9, textHeight, str(dataStep.testTimestamp), border = 1)
     pdf.ln(textHeight)
 
     # print the 3rd row: comments header (bold)
@@ -231,7 +231,7 @@ def MakePdfDataStepRow(pdf, dataStep):
         pdf.set_font(pdf.defaultFontNames[1], '')
 
     # extra wide description taking up all the columns.
-    pdf.cell(colWidth * 4.0, textHeight, 'Comments', border = 1)
+    pdf.cell(colWidth * 10, textHeight, 'Comments', border = 1)
     pdf.ln(textHeight)
 
     # print the 4th row: description, proportional, regular weight
@@ -245,7 +245,7 @@ def MakePdfDataStepRow(pdf, dataStep):
     # a line break is not needed if the multi_cell description is mulitple lines
     # detect the multiple line case
     startRowY = pdf.get_y()
-    pdf.cell(colWidth * 4.0, textHeight, str(dataStep.comments), border = 1)
+    pdf.cell(colWidth * 10, textHeight, str(dataStep.comments), border = 1)
     endRowY = pdf.get_y()
     rowLines = ceil((endRowY - startRowY) / textHeight)
     if rowLines < 1:
@@ -260,10 +260,10 @@ def MakePdfDataStepRow(pdf, dataStep):
         # default
         pdf.set_font(pdf.defaultFontNames[1], '')
 
-    pdf.cell(colWidth, textHeight, 'Volt. Nom.', border = 1)
-    pdf.cell(colWidth, textHeight, 'Volt. Meas.', border = 1)
-    pdf.cell(colWidth, textHeight, 'I Limit', border = 1)
-    pdf.cell(colWidth, textHeight, 'I Meas.', border = 1)
+    pdf.cell(colWidth * 2.5, textHeight, 'V Nom. (V)', border = 1)
+    pdf.cell(colWidth * 2.5, textHeight, 'V Max Meas. (V)', border = 1)
+    pdf.cell(colWidth * 2.5, textHeight, 'I Limit (mA)', border = 1)
+    pdf.cell(colWidth * 2.5, textHeight, 'I Max Meas. (mA)', border = 1)
     pdf.ln(textHeight)
 
     # print the 6th row: values (regular weight)
@@ -275,10 +275,10 @@ def MakePdfDataStepRow(pdf, dataStep):
         # default
         pdf.set_font(pdf.defaultFontNames[0], '')
 
-    pdf.cell(colWidth, textHeight, str(dataStep.nominalVoltage), border = 1)
-    pdf.cell(colWidth, textHeight, str(dataStep.measuredVoltage), border = 1)
-    pdf.cell(colWidth, textHeight, str(dataStep.currentLimit), border = 1)
-    pdf.cell(colWidth, textHeight, str(dataStep.measuredCurrent), border = 1)
+    pdf.cell(colWidth * 2.5, textHeight, str(dataStep.nominalVoltage), border = 1)
+    pdf.cell(colWidth * 2.5, textHeight, str(dataStep.measuredVoltage), border = 1)
+    pdf.cell(colWidth * 2.5, textHeight, str(dataStep.currentLimit), border = 1)
+    pdf.cell(colWidth * 2.5, textHeight, str(dataStep.measuredCurrent), border = 1)
     pdf.ln(textHeight * 3)
 
 # Return a csv string containing the graph data with the following format:
@@ -331,18 +331,19 @@ def MakeGraphDataCsvFormat(axisDefs, axisData):
     return hStr + rStr
 
 # Create a plot and make a pdf using the specified file name, if specified.
-def PlotTvsVandI(tData, vData, iData, iThreshold, showPlot=False, fileName=None):
+def PlotTvsVandI(tData, vData, iData, iThreshold, iMax, title='', showPlot=False, fileName=None):
     # get a figure and a single sub-plot to allow better control
     # than using no sub-plots
     fig, vAxis = plt.subplots()
 
     # set the titles
-    fig.suptitle('Current and Voltage versus Time (t)', \
+    fig.suptitle('Current and Voltage versus Time', \
                 fontsize=14, fontweight='bold')
-    plt.title('Plot Title', fontsize=12, fontweight='bold')
+    plt.title(title, fontsize=12, fontweight='bold')
     tColor = 'black'
     vColor = 'blue'
     iColor = 'green'
+    mxColor = 'orange' # max measured color
     thColor = 'red' # threshold color
     vAxis.set_xlabel('time (s)', color=tColor)
     vAxis.set_ylabel('voltage (V)', color=vColor)
@@ -354,23 +355,33 @@ def PlotTvsVandI(tData, vData, iData, iThreshold, showPlot=False, fileName=None)
     iAxis = vAxis.twinx()
     iAxis.set_ylabel('current (mA)', color=iColor)
     iAxis.plot(tData, iData, color=iColor)
-    # control the current y axis tick marks
-    yMax = max(iData) * 1.01
-    yStep = yMax / 7.0
-    iAxis.yaxis.set_major_locator(ticker.LinearLocator(6))
     # plot horizontal line at current threshold
     iThs = [iThreshold] * len(tData)
     iAxis.plot(tData, iThs, color=thColor)
-
+    # plot horizontal line at the max measured current
+    iMx = [iMax] * len(tData)
+    iAxis.plot(tData, iMx, color=mxColor)
     # show the grid
     vAxis.grid(b=True, which='both', linewidth=0.5, linestyle='-.')
+
+    # iEstablish a relation between the two zxes scales using a funciton and
+    # set the ticks on the second (iAxis) to be in the same location as on the
+    # first (vAxis).
+    # For each vAxis tick, figure out the percentage up the vAxis and put the
+    # iAxis tick in the same spot
+    limsV = vAxis.get_ylim() # [0] axis min value, [1] axis max value
+    limsI = iAxis.get_ylim()
+    # IMin + ((x - VMin) / (VMax - VMin)) * (IMax - IMin)
+    f = lambda x: limsI[0] + ((x - limsV[0])/(limsV[1] - limsV[0])) * (limsI[1] - limsI[0])
+    iTicks = f(vAxis.get_yticks())
+    iAxis.yaxis.set_major_locator(ticker.FixedLocator(iTicks))
+
 
     # put page numbers (3 of 3) in the lower left
     #txStyle = dict(fontsize=8, color='black', horizontalalignment='left')
     #plt.text(0.05, 0, 'Page 3 of 3', transform=plt.gcf().transFigure, **txStyle)
 
-    # Save the plot if the outFilePrefix is not empty. If it is empty, don't
-    # save the plot.
+    # Save the plot if fileName is specified.
     if fileName is not None:
         try:
             # not sure what the possible exceptions are. Take a guess, and raise
