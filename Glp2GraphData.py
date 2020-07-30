@@ -146,3 +146,17 @@ class Glp2GraphData(object):
         except IndexError:
             return None
 
+    # return the minimum value found in the data for the specified axis (zero based).
+    def getAxisDataMin(self, axis=0):
+        try:
+            return min([float(samples[axis]) for samples in self._axisData])
+        except IndexError:
+            return None
+
+    # return the maximum value found in the data for the specified axis (zero based).
+    def getAxisDataMax(self, axis=0):
+        try:
+            return max([float(samples[axis]) for samples in self._axisData])
+        except IndexError:
+            return None
+

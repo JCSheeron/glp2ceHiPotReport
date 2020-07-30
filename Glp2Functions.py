@@ -17,6 +17,10 @@ import matplotlib.pyplot as plt # for plotting
 import matplotlib.ticker as ticker
 # pdf manipulation
 from PyPDF2 import PdfFileMerger, PdfFileReader
+# user libraries
+# Note: May need PYTHONPATH (set in ~/.profile?) to be set depending
+# on the location of the imported files
+from bpsMath import oom, oomCeil
 
 
 # Create a list of test data objects from a test data file.
@@ -281,19 +285,19 @@ def MakePdfDataStepRow(pdf, dataStep):
     pdf.cell(colWidth * 2.5, textHeight, str(dataStep.measuredCurrent), border = 1)
     pdf.ln(textHeight * 3)
 
+
 # Return a csv string containing the graph data with the following format:
 # Axis0Label (units), Axis1Label (units) ... \n
 # value, value, ... \n
 #
 # Provide the axis definitions, and the axis data.
-# csvString will be overwritten.  It is assumed axisDefs and axisData are tuples
-# to prevent inadvertant changes.
-# The axisDefs is assumed to have this format (tuple of tuples):
+# It is assumed axisDefs and axisData are iterables.
+# The axisDefs should have this format (tuple of tuples):
 # (
 #   (axis 0 label, axis 0 units, axis 0 color, axis 0 min, axis 0 max, axis 0 formatting),
 #   (axis 1 label, axis 1 units, axis 1 color, axis 1 min, axis 1 max, axis 1 formatting),
 #   ...
-#   )
+# )
 def MakeGraphDataCsvFormat(axisDefs, axisData):
     # Make the csv header
     # Axis 0 label (axis 0 units), Axis 1 label (axis 1 units) ... \n
@@ -307,10 +311,10 @@ def MakeGraphDataCsvFormat(axisDefs, axisData):
         # codes are known (emperically determined)
         if '%%968' == axis[0]:
             # code for current
-            label= 'current'
+            label= 'I Meas.'
         elif '%%740' == axis[0]:
             # code for voltate
-            label= 'voltage'
+            label= 'V Meas.'
         else:
             # no or unknown code. Use label directly.
             label= axis[0]
@@ -347,24 +351,40 @@ def PlotTvsVandI(tData, vData, iData, iThreshold, iMax, title='', showPlot=False
     thColor = 'red' # threshold color
     vAxis.set_xlabel('time (s)', color=tColor)
     vAxis.set_ylabel('voltage (V)', color=vColor)
-    vAxis.plot(tData, vData, color=vColor)
+    vAxis.plot(tData, vData, color=vColor, linewidth=0.5, label='V Meas.') # voltage line
     # make additional room for the labels
     #plt.subplots_adjust(left=0.18, bottom=0.18)
 
     # make a second y axis for current that shares the same x axis as voltage
     iAxis = vAxis.twinx()
-    iAxis.set_ylabel('current (mA)', color=iColor)
-    iAxis.plot(tData, iData, color=iColor)
-    # plot horizontal line at current threshold
-    iThs = [iThreshold] * len(tData)
-    iAxis.plot(tData, iThs, color=thColor)
     # plot horizontal line at the max measured current
     iMx = [iMax] * len(tData)
-    iAxis.plot(tData, iMx, color=mxColor)
+    iAxis.plot(tData, iMx, color=mxColor, linewidth=0.75, label='I Meas. Max')
+    # Plot the measured current -- do this after the horizontal line at the max
+    # os the current is on top.
+    iAxis.set_ylabel('current (mA)', color=iColor)
+    iAxis.plot(tData, iData, color=iColor, linewidth=0.75, label='I Meas.')
+    # If the measured current is near the threshold, plot the threshold. Make this
+    # conditional, so that when a test is successful and the measured currents are
+    # very small, the threshold value does not overwhelm and drive the axis range,
+    # leaveing the plotted measured current at the very bottom of the graph at low
+    # resolution.
+    if oom(iMax) >= oom(iThreshold):
+        # Current values are large enough to make the threshold be in the same ballpark.
+        # pPlt horizontal line at current threshold
+        iThs = [iThreshold] * len(tData)
+        iAxis.plot(tData, iThs, color=thColor, linewidth=1.0, linestyle='dotted', label='I Thresh.')
+
     # show the grid
     vAxis.grid(b=True, which='both', linewidth=0.5, linestyle='-.')
+    # show legend
+    # Need voltage from the earlier plot (different axis), so use get_legend_handles_labels() for
+    # each axis and append to create complete lists of lines and labels for the legend
+    linesVAxis, labelsVAxis = vAxis.get_legend_handles_labels()
+    linesIAxis, labelsIAxis = iAxis.get_legend_handles_labels()
+    iAxis.legend(linesVAxis + linesIAxis, labelsVAxis + labelsIAxis)
 
-    # iEstablish a relation between the two zxes scales using a funciton and
+    # Establish a relation between the two zxes scales using a funciton and
     # set the ticks on the second (iAxis) to be in the same location as on the
     # first (vAxis).
     # For each vAxis tick, figure out the percentage up the vAxis and put the
@@ -373,9 +393,9 @@ def PlotTvsVandI(tData, vData, iData, iThreshold, iMax, title='', showPlot=False
     limsI = iAxis.get_ylim()
     # IMin + ((x - VMin) / (VMax - VMin)) * (IMax - IMin)
     f = lambda x: limsI[0] + ((x - limsV[0])/(limsV[1] - limsV[0])) * (limsI[1] - limsI[0])
+    # calculate the current ticks.
     iTicks = f(vAxis.get_yticks())
     iAxis.yaxis.set_major_locator(ticker.FixedLocator(iTicks))
-
 
     # put page numbers (3 of 3) in the lower left
     #txStyle = dict(fontsize=8, color='black', horizontalalignment='left')

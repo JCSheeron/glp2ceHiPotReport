@@ -649,8 +649,9 @@ if not (args.supressDfnPdf and args.supressDataPdf and args.supressGraphPdf):
                 MakePdfDataStepRow(pdf, step)
 
             # if there is another section, add a new page
-            if not args.supressGraphPdf:
-                pdf.add_page() # use ctor params
+            # Not needed because graphs get appended to this file
+            # if not args.supressGraphPdf:
+                # pdf.add_page() # use ctor params
 
         # Write the test data to a pdf file.
         # Use a temporary file. If not supressed, the graph will
