@@ -99,6 +99,20 @@ must be an integer, or something convertable to an integer. Step number not set.
 
     @property
     def stepMethod(self):
+        # enumerate the stored method value into human friendly text
+        # returned option names are all lower case
+        try:
+            methodKey = int(self._stepData.get(constants.DFN_STEP_METHOD_OPTNAME.lower()))
+        except ValueError as ve:
+            return None
+
+        if 24 == methodKey:
+            return 'HV DC'
+        else:
+            return methodKey
+
+    @property
+    def stepMethodKey(self):
         # returned option names are all lower case
         try:
             return int(self._stepData.get(constants.DFN_STEP_METHOD_OPTNAME.lower()))
@@ -107,6 +121,26 @@ must be an integer, or something convertable to an integer. Step number not set.
 
     @property
     def stepMode(self):
+        # enumerate the stored mode value into human friendly text
+        try:
+            # returned option names are all lower case
+            modeKey = int(self._stepData.get(constants.DFN_STEP_MODE_OPTNAME.lower()))
+        except ValueError as ve:
+            return None
+
+        if 0 == modeKey:
+            return 'Current'
+        elif 1 == modeKey:
+            return 'Resistance'
+        elif 2 == modeKey:
+            return 'DC Overcurrent=GO'
+        elif 4 == modeKey:
+            return 'Discharge'
+        else:
+            return modeKey
+
+    @property
+    def stepModeKey(self):
         try:
             # returned option names are all lower case
             return int(self._stepData.get(constants.DFN_STEP_MODE_OPTNAME.lower()))

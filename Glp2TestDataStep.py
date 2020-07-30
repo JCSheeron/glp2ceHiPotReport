@@ -40,7 +40,7 @@
 class Glp2TestDataStep(object):
     def __init__(self, data=None, header=None, decimalSeparator = ',',
                  testStepGuidIdx=1, commentsIdx=20, operatorIdx=27,
-                 deviceNumberIdx=31, stepNumberIdx=2,
+                 deviceNumberIdx=31, stepNumberIdx=2, testMethodKeyIdx=4,
                  nomVoltIdx=6, nomVoltUnitIdx=7, actVoltIdx=8,
                  actVoltUnitIdx=9, currentLimIdx=10, currentLimUnitIdx=11,
                  actCurrIdx=12, actCurrUnitIdx=13, timestampIdx=30, graphDataIdx=76):
@@ -85,6 +85,7 @@ No step information captured.')
         self._operatorIdx = operatorIdx
         self._deviceNumberIdx = deviceNumberIdx
         self._stepNumberIdx = stepNumberIdx
+        self._testMethodKeyIdx = testMethodKeyIdx
         self._nomVoltIdx = nomVoltIdx
         self._nomVoltUnitIdx = nomVoltUnitIdx
         self._actVoltIdx = actVoltIdx
@@ -103,6 +104,8 @@ No step information captured.')
                                                     self.testStepGuid)
         outputMsg+= '{:21}{}\n'.format('Device Number: ',
                                           self.deviceNumber)
+        outputMsg+= '{:21}{}\n'.format('Test Method: ',
+                                          self.testMethod)
         outputMsg+= '{:21}{:23}{:18}{}\n'.format('Nominal Voltage: ',
                                                     str(self.nominalVoltage) + ' ' +
                                                     str(self.nominalVoltageUnit),
@@ -180,6 +183,28 @@ No step information captured.')
         # get the value from the raw data if the data is present
         if self._rawData is not None and self._stepNumberIdx + 1 <= len(self._rawData):
             return int(self._rawData[self._stepNumberIdx])
+        else:
+            return None
+
+    @property
+    def testMethod(self):
+        # enumerate the stored method value into human friendly text
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._testMethodKeyIdx + 1 <= len(self._rawData):
+            methodKey = int(self._rawData[self._testMethodKeyIdx])
+        else:
+            return None
+
+        if 24 == methodKey:
+            return 'HV DC'
+        else:
+            return methodKey
+
+    @property
+    def testMethodKey(self):
+        # get the value from the raw data if the data is present
+        if self._rawData is not None and self._testMethodKeyIdx + 1 <= len(self._rawData):
+            return int(self._rawData[self._testMethodKeyIdx])
         else:
             return None
 

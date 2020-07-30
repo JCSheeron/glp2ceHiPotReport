@@ -70,7 +70,7 @@ import matplotlib.pyplot as plt # for plotting
 # pdf creation
 # from fpdf import FPDF
 # pdf manipulation
-from PyPDF2 import PdfFileMerger, PdfFileReader
+from PyPDF2 import PdfFileMerger, PdfFileReader # pdf manipulation
 
 # for default dictionary
 from collections import defaultdict
@@ -79,7 +79,7 @@ from collections import defaultdict
 # Note: May need PYTHONPATH (set in ~/.profile?) to be set depending
 # on the location of the imported files
 from bpsFile import listFiles
-from bpsCPdf import cPdf
+from bpsCPdf import cPdf # pdf creation
 from bpsPrettyPrint import listPrettyPrint2ColStr
 
 # specialized libraries unlikely to be used elsewhere. These should
@@ -260,7 +260,11 @@ elif args.testDfnFile != '' and args.testDfnFile is not None and args.testDfnFil
     if not args.verbose:
         print(partMsg)
     try:
-        testDfns.append(Glp2TestDfn(args.testDfnFile, join(testDfnPath, args.testDfnFile),
+        # split off the extension from the file name to use as the dfn name.
+        testDfnName = args.testDfnFile.rsplit('.', 1)[0] # split off 1 . from the right
+        print('testDfnName')
+        print(testDfnName)
+        testDfns.append(Glp2TestDfn(testDfnName, join(testDfnPath, args.testDfnFile),
                                     args.testDfnEncoding))
         # convert to a tuple to prevent change
         testDfns = tuple(testDfns)
@@ -287,7 +291,11 @@ data will be used to try and determine the correct test definition file to use.'
     for dfnName in testDfnNames:
         if not dfnName.startswith('.') and dfnName.lower().endswith('.tpr'):
             try:
-                testDfns.append(Glp2TestDfn(dfnName, join(testDfnPath, dfnName), args.testDfnEncoding))
+                # split off the extension from the file name to use as the dfn name.
+                dName = dfnName.rsplit('.', 1)[0] # split off 1 . from the right
+                print('dName')
+                print(dName)
+                testDfns.append(Glp2TestDfn(dName, join(testDfnPath, dfnName), args.testDfnEncoding))
             except UnicodeError as  ue:
                 print('Unicode Error: Unable to load test definition file: ' + dfnName +
                 '. Check encoding. ' + args.testDfnEncoding + ' was expected.')
@@ -514,6 +522,7 @@ if not args.supressAssocPdf:
     # embed datetime to make file unique
     fname= 'testDataFileAssocitions_' + fileId + '.pdf'
     # Units are in points (pt)
+    # Override default footer to not show page numbers
     dataAssocPdf = cPdf(orientation = 'P', unit = 'pt', format='Letter',
                         headerText='Test Definition and Test Data Associations')
     # define the nb alias for total page numbers used in footer
@@ -548,7 +557,10 @@ if not (args.supressDfnPdf and args.supressDataPdf and args.supressGraphPdf):
         # Instantiate the extended pdf class and get on with making the pdf
         # Units are in points (pt)
         headerText = '{}    {} {}'.format('Test Data','File Name:', test.fileName)
-        pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter', headerText=headerText)
+        # Page number total ends up wrong because of appending of graph data, so suppress
+        # the default footer by specifying and empty one.
+        pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter', headerText=headerText,
+                footerText='')
         # define the nb alias for total page numbers used in footer
         pdf.alias_nb_pages() # Enable {nb} magic: total number of pages used in the footer
         pdf.set_margins(54, 68, 54) # left, top, right margins (in points)
@@ -606,8 +618,8 @@ if not (args.supressDfnPdf and args.supressDataPdf and args.supressGraphPdf):
                 # Include test data file name in the beginning
                 # to help make it clear where/why this definition is being used
                 testDfnMsg  = '\n{} {}'.format('Program Name:', testDfns[tDfnMatch[tIdx]].name)
-                testDfnMsg += '\n{} {}'.format('Programmer:', testDfns[tDfnMatch[tIdx]].nameOfProgrammer)
                 testDfnMsg += '\n{} {}'.format('File Name:', testDfns[tDfnMatch[tIdx]].fileName)
+                testDfnMsg += '\n{} {}'.format('Programmer:', testDfns[tDfnMatch[tIdx]].nameOfProgrammer)
                 testDfnMsg += '\n{} {}\n\n'.format('Comments:', testDfns[tDfnMatch[tIdx]].generalComments)
                 # Add the test dfn data to the pdf
                 pdf.multi_cell(w=0, h=13, txt=testDfnMsg, border=0, align='L', fill=False )

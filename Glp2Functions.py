@@ -20,8 +20,7 @@ from PyPDF2 import PdfFileMerger, PdfFileReader
 # user libraries
 # Note: May need PYTHONPATH (set in ~/.profile?) to be set depending
 # on the location of the imported files
-from bpsMath import oom, oomCeil
-
+from bpsMath import oom
 
 # Create a list of test data objects from a test data file.
 # The file may contain data for more than one test.
@@ -89,7 +88,7 @@ def MakePdfDfnStepRow(pdf, dfnStep):
     # calc the effective page width, epw, and the 'unit' cell width.  Per the
     # desired layout, there are 6 cell widths across a page.
     epw = pdf.w - (pdf.l_margin + pdf.r_margin)
-    colWidth = epw/6.0
+    colWidth = epw/12.0
     # text height
     textHeight = pdf.font_size
     # font order is mono regular, mono bold, proportional regular, proportional bold
@@ -103,9 +102,9 @@ def MakePdfDfnStepRow(pdf, dfnStep):
         # default
         pdf.set_font(pdf.defaultFontNames[1], '')
 
-    pdf.cell(colWidth, textHeight, 'Step', border = 1)
-    pdf.cell(colWidth, textHeight, 'Mode', border = 1)
-    pdf.cell(colWidth * 4, textHeight, 'Method', border = 1)
+    pdf.cell(colWidth * 2.4, textHeight, 'Step', border = 1)
+    pdf.cell(colWidth * 4.8, textHeight, 'Test Method', border = 1)
+    pdf.cell(colWidth * 4.8, textHeight, 'Step Mode', border = 1)
     pdf.ln(textHeight)
 
     # print the 2nd row, a value row (regular weight)
@@ -117,9 +116,9 @@ def MakePdfDfnStepRow(pdf, dfnStep):
         # default
         pdf.set_font(pdf.defaultFontNames[0], '')
 
-    pdf.cell(colWidth, textHeight, str(dfnStep.stepNum), border = 1)
-    pdf.cell(colWidth, textHeight, str(dfnStep.stepMode), border = 1)
-    pdf.cell(colWidth * 4, textHeight, str(dfnStep.stepMethod), border = 1)
+    pdf.cell(colWidth * 2.4, textHeight, str(dfnStep.stepNum), border = 1)
+    pdf.cell(colWidth * 4.8, textHeight, str(dfnStep.stepMethod), border = 1)
+    pdf.cell(colWidth * 4.8, textHeight, str(dfnStep.stepMode), border = 1)
     pdf.ln(textHeight)
 
     # print the 3rd row: description header (bold)
@@ -131,7 +130,7 @@ def MakePdfDfnStepRow(pdf, dfnStep):
         pdf.set_font(pdf.defaultFontNames[1], '')
 
     # extra wide description taking up all the columns.
-    pdf.cell(colWidth * 6.0, textHeight, 'Description', border = 1)
+    pdf.cell(colWidth * 12.0, textHeight, 'Description', border = 1)
     pdf.ln(textHeight)
 
     # print the 4th row: description, proportional, regular weight
@@ -145,7 +144,7 @@ def MakePdfDfnStepRow(pdf, dfnStep):
     # a line break is not needed if the multi_cell description is mulitple lines
     # detect the multiple line case
     startRowY = pdf.get_y()
-    pdf.cell(colWidth * 6.0, textHeight, str(dfnStep.stepDescription), border = 1)
+    pdf.cell(colWidth * 12.0, textHeight, str(dfnStep.stepDescription), border = 1)
     endRowY = pdf.get_y()
     rowLines = ceil((endRowY - startRowY) / textHeight)
     if rowLines < 1:
@@ -160,12 +159,11 @@ def MakePdfDfnStepRow(pdf, dfnStep):
         # default
         pdf.set_font(pdf.defaultFontNames[1], '')
 
-    pdf.cell(colWidth, textHeight, 'V Test (V)', border = 1)
-    pdf.cell(colWidth, textHeight, 'I Range (mA)', border = 1)
-    pdf.cell(colWidth, textHeight, 'I Limit (mA)', border = 1)
-    pdf.cell(colWidth, textHeight, 'Test Time (s)', border = 1)
-    pdf.cell(colWidth, textHeight, 'Ramp Time (s)', border = 1)
-    pdf.cell(colWidth, textHeight, 'Delay Time (s)', border = 1)
+    pdf.cell(colWidth * 2.4, textHeight, 'V Test (V)', border = 1)
+    pdf.cell(colWidth * 2.4, textHeight, 'I Limit (mA)', border = 1)
+    pdf.cell(colWidth * 2.4, textHeight, 'Test Time (s)', border = 1)
+    pdf.cell(colWidth * 2.4, textHeight, 'Ramp Time (s)', border = 1)
+    pdf.cell(colWidth * 2.4, textHeight, 'Delay Time (s)', border = 1)
     pdf.ln(textHeight)
 
     # print the 6th row: values (regular weight)
@@ -177,12 +175,11 @@ def MakePdfDfnStepRow(pdf, dfnStep):
         # default
         pdf.set_font(pdf.defaultFontNames[0], '')
 
-    pdf.cell(colWidth, textHeight, str(dfnStep.testVoltage), border = 1)
-    pdf.cell(colWidth, textHeight, str(dfnStep.currentRange), border = 1)
-    pdf.cell(colWidth, textHeight, str(dfnStep.currentLimit), border = 1)
-    pdf.cell(colWidth, textHeight, str(dfnStep.testTime), border = 1)
-    pdf.cell(colWidth, textHeight, str(dfnStep.rampTime), border = 1)
-    pdf.cell(colWidth, textHeight, str(dfnStep.delayTime), border = 1)
+    pdf.cell(colWidth * 2.4, textHeight, str(dfnStep.testVoltage), border = 1)
+    pdf.cell(colWidth * 2.4, textHeight, str(dfnStep.currentLimit), border = 1)
+    pdf.cell(colWidth * 2.4, textHeight, str(dfnStep.testTime), border = 1)
+    pdf.cell(colWidth * 2.4, textHeight, str(dfnStep.rampTime), border = 1)
+    pdf.cell(colWidth * 2.4, textHeight, str(dfnStep.delayTime), border = 1)
     pdf.ln(textHeight * 3)
 
 # This function is expecting an FPDF object and a Glp2TestDfnStep.  It assumes
@@ -209,8 +206,9 @@ def MakePdfDataStepRow(pdf, dataStep):
         # default
         pdf.set_font(pdf.defaultFontNames[1], '')
 
-    pdf.cell(colWidth, textHeight, 'Step', border = 1)
-    pdf.cell(colWidth * 9, textHeight, 'Timestamp', border = 1)
+    pdf.cell(colWidth * 3.0, textHeight, 'Step', border = 1)
+    pdf.cell(colWidth * 3.0, textHeight, 'Test Method', border = 1)
+    pdf.cell(colWidth * 6.0, textHeight, 'Timestamp', border = 1)
     pdf.ln(textHeight)
 
     # print the 2nd row, a value row (regular weight)
@@ -222,8 +220,9 @@ def MakePdfDataStepRow(pdf, dataStep):
         # default
         pdf.set_font(pdf.defaultFontNames[0], '')
 
-    pdf.cell(colWidth, textHeight, str(dataStep.stepNumber), border = 1)
-    pdf.cell(colWidth * 9, textHeight, str(dataStep.testTimestamp), border = 1)
+    pdf.cell(colWidth * 3.0, textHeight, str(dataStep.stepNumber), border = 1)
+    pdf.cell(colWidth * 3.0, textHeight, str(dataStep.testMethod), border = 1)
+    pdf.cell(colWidth * 6.0, textHeight, str(dataStep.testTimestamp), border = 1)
     pdf.ln(textHeight)
 
     # print the 3rd row: comments header (bold)
@@ -235,7 +234,7 @@ def MakePdfDataStepRow(pdf, dataStep):
         pdf.set_font(pdf.defaultFontNames[1], '')
 
     # extra wide description taking up all the columns.
-    pdf.cell(colWidth * 10, textHeight, 'Comments', border = 1)
+    pdf.cell(colWidth * 12.0, textHeight, 'Comments', border = 1)
     pdf.ln(textHeight)
 
     # print the 4th row: description, proportional, regular weight
@@ -249,7 +248,7 @@ def MakePdfDataStepRow(pdf, dataStep):
     # a line break is not needed if the multi_cell description is mulitple lines
     # detect the multiple line case
     startRowY = pdf.get_y()
-    pdf.cell(colWidth * 10, textHeight, str(dataStep.comments), border = 1)
+    pdf.cell(colWidth * 12.0, textHeight, str(dataStep.comments), border = 1)
     endRowY = pdf.get_y()
     rowLines = ceil((endRowY - startRowY) / textHeight)
     if rowLines < 1:
@@ -264,10 +263,10 @@ def MakePdfDataStepRow(pdf, dataStep):
         # default
         pdf.set_font(pdf.defaultFontNames[1], '')
 
-    pdf.cell(colWidth * 2.5, textHeight, 'V Nom. (V)', border = 1)
-    pdf.cell(colWidth * 2.5, textHeight, 'V Max Meas. (V)', border = 1)
-    pdf.cell(colWidth * 2.5, textHeight, 'I Limit (mA)', border = 1)
-    pdf.cell(colWidth * 2.5, textHeight, 'I Max Meas. (mA)', border = 1)
+    pdf.cell(colWidth * 3.0, textHeight, 'V Nom. (V)', border = 1)
+    pdf.cell(colWidth * 3.0, textHeight, 'V End Meas. (V)', border = 1)
+    pdf.cell(colWidth * 3.0, textHeight, 'I Limit (mA)', border = 1)
+    pdf.cell(colWidth * 3.0, textHeight, 'I Max Meas. (mA)', border = 1)
     pdf.ln(textHeight)
 
     # print the 6th row: values (regular weight)
@@ -279,10 +278,10 @@ def MakePdfDataStepRow(pdf, dataStep):
         # default
         pdf.set_font(pdf.defaultFontNames[0], '')
 
-    pdf.cell(colWidth * 2.5, textHeight, str(dataStep.nominalVoltage), border = 1)
-    pdf.cell(colWidth * 2.5, textHeight, str(dataStep.measuredVoltage), border = 1)
-    pdf.cell(colWidth * 2.5, textHeight, str(dataStep.currentLimit), border = 1)
-    pdf.cell(colWidth * 2.5, textHeight, str(dataStep.measuredCurrent), border = 1)
+    pdf.cell(colWidth * 3.0, textHeight, str(dataStep.nominalVoltage), border = 1)
+    pdf.cell(colWidth * 3.0, textHeight, str(dataStep.measuredVoltage), border = 1)
+    pdf.cell(colWidth * 3.0, textHeight, str(dataStep.currentLimit), border = 1)
+    pdf.cell(colWidth * 3.0, textHeight, str(dataStep.measuredCurrent), border = 1)
     pdf.ln(textHeight * 3)
 
 
