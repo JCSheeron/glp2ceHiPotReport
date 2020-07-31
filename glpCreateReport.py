@@ -50,7 +50,9 @@ from datetime import datetime, time
 # os file related
 # join combines path strings in a smart way (i.e. will insert '/' if missing,
 # or remove a '/' if a join creates a repeat.
-from os.path import join, splitext
+from glob import glob
+from os.path import join, splitext, exists
+from os import rename, remove
 
 # config file parser
 import configparser
@@ -81,6 +83,7 @@ from collections import defaultdict
 from bpsFile import listFiles
 from bpsCPdf import cPdf # pdf creation
 from bpsPrettyPrint import listPrettyPrint2ColStr
+
 
 # specialized libraries unlikely to be used elsewhere. These should
 # travel with this file.
@@ -293,8 +296,6 @@ data will be used to try and determine the correct test definition file to use.'
             try:
                 # split off the extension from the file name to use as the dfn name.
                 dName = dfnName.rsplit('.', 1)[0] # split off 1 . from the right
-                print('dName')
-                print(dName)
                 testDfns.append(Glp2TestDfn(dName, join(testDfnPath, dfnName), args.testDfnEncoding))
             except UnicodeError as  ue:
                 print('Unicode Error: Unable to load test definition file: ' + dfnName +
@@ -571,14 +572,15 @@ if not (args.supressDfnPdf and args.supressDataPdf and args.supressGraphPdf):
         # colwidth is somewhat arbitrary, but picked to be a convenient size
         epw = pdf.w - (pdf.l_margin + pdf.r_margin)
         colWidth = epw/6.0
-        # Create file name from test data.
+        # Create file name and plot title from test data.
         # Exclude the extension so the same file name will accomodate the pdf and csv.
         # Use the prefix if one was specified.
+        plotTitle= splitext(test.fileName)[0] + ' Test ' + str(tIdx + 1) 
         if args.outputFilePrefix is not None:
-            fname= args.outputFilePrefix + splitext(test.fileName)[0] + '_' + str(tIdx)
+            fname= args.outputFilePrefix + splitext(test.fileName)[0] + '_Test_' + str(tIdx + 1)
         else:
             # no prefix specified
-            fname= splitext(tests[tIdx].fileName)[0] + '_' + str(tIdx)
+            fname= splitext(tests[tIdx].fileName)[0] + '_Test_' + str(tIdx + 1)
 
         # *** Definition information
         # Create a definition section unless it is supressed
@@ -681,54 +683,74 @@ if not (args.supressDfnPdf and args.supressDataPdf and args.supressGraphPdf):
         if not (args.supressGraphPdf and args.supressGraphCsv):
             # Process the data for each step. Make a header for the csv file, and
             # then use a graphObject to process the graph data for each step
-                for step in test._steps:
-                    # Make the csv header
-                    testDataMsg = '\n{} {}'.format('Program Name:', test.getTestProgramName)
-                    testDataMsg += '\n{} {}'.format('Device S/N:', test.getDeviceNumber)
-                    testDataMsg += '\n{} {}\n\n'.format('Operator:', test.getOperator)
-                    # graph data for each step
-                    grphObject = Glp2GraphData(step.graphData)
-                    testDataMsg += MakeGraphDataCsvFormat(grphObject.axisDefinitions, grphObject.axesData)
+            for step in test._steps:
+                # Make the csv header
+                testDataMsg = '\n{} {}'.format('Program Name:', test.getTestProgramName)
+                testDataMsg += '\n{} {}'.format('Device S/N:', test.getDeviceNumber)
+                testDataMsg += '\n{} {}'.format('Operator:', test.getOperator)
+                testDataMsg += '\n{} {}'.format('Step:', step.stepNumber)
+                testDataMsg += '\n{} {}'.format('Time Stamp:', step.testTimestamp)
+                testDataMsg += '\n{}{}{},{}'.format('Current Limit (', step.currentLimitUnit, '):', step.currentLimit)
+                testDataMsg += '\n{}{}{},{}\n\n'.format('Current Max Meas (', step.measuredCurrentUnit, '):', step.measuredCurrent)
+                # graph data for each step
+                grphObject = Glp2GraphData(step.graphData)
+                testDataMsg += MakeGraphDataCsvFormat(grphObject.axisDefinitions, grphObject.axesData)
 
-                    # Create a csv text file with the graph data, unless it is suppressed
-                    if not args.supressGraphCsv:
-                        # Write the data to a file.
-                        # Since it is already formatted as a csv file, the csvWriter isn't needed.
-                        # It can be written as a text file with a csv extension
-                        cfname = fname + '_' + str(step.stepNumber) + '.csv' # csv file name
-                        print('Writing the graph data to a csv file: ' + cfname)
-                        # create a new file for writing, deleting any existing version
-                        try:
-                            outFile = open(cfname, 'w', encoding=args.outputFileEncoding)
-                        except ValueError as ve:
-                            print('ERROR opening the graph data csv file. Nothing written.')
-                            print(ve)
+                # Create a csv text file with the graph data, unless it is suppressed
+                if not args.supressGraphCsv:
+                    # Write the data to a file.
+                    # Since it is already formatted as a csv file, the csvWriter isn't needed.
+                    # It can be written as a text file with a csv extension
+                    cfname = fname + '_Step_' + str(step.stepNumber) + '.csv' # csv file name
+                    print('Writing the graph data to a csv file: ' + cfname)
+                    # create a new file for writing, deleting any existing version
+                    try:
+                        outFile = open(cfname, 'w', encoding=args.outputFileEncoding)
+                    except ValueError as ve:
+                        print('ERROR opening the graph data csv file. Nothing written.')
+                        print(ve)
 
-                        try:
-                            outFile.write(testDataMsg)
-                            outFile.close()
-                        except ValueError as ve:
-                            print('ERROR writing the graph data to a csv file. Nothing written.')
-                            print(ve)
+                    try:
+                        outFile.write(testDataMsg)
+                        outFile.close()
+                    except ValueError as ve:
+                        print('ERROR writing the graph data to a csv file. Nothing written.')
+                        print(ve)
 
-                    # Create a graph pdf and merge it in with the existing pdf if not supress
-                    if not args.supressGraphPdf:
-                        # temp file name unlikely to exist and be something elseed
-                        gfname = '__zzqq__graph_' + fname + '_' + str(step.stepNumber) + '.pdf'
-                        print('Writing the graph to a temporary pdf file: ' + gfname)
-                        plotVI(tData=grphObject.getAxisData(0),
+                # Create a graph pdf and merge it in with the existing pdf if not supress
+                if not args.supressGraphPdf:
+                    # temp file name unlikely to exist and be something elseed
+                    gfname = '__zzqq__graph_' + fname + '_Step_' + str(step.stepNumber) + '.pdf'
+                    print('Writing the graph to a temporary pdf file: ' + gfname)
+                    plotVI(tData=grphObject.getAxisData(0),
                             vData=grphObject.getAxisData(2),
-                            iData=grphObject.getAxisData(1),
-                            iThreshold=step.currentLimit,
-                            iMax=step.measuredCurrent,
-                            title=fname + ' Step ' + str(step.stepNumber),
+                            # plot currents in uA
+                            iData=tuple(i * 1000.0 for i in grphObject.getAxisData(1)),
+                            iThreshold=step.currentLimit * 1000.0,
+                            iMax=step.measuredCurrent * 1000.0,
+                            title=plotTitle + ' Step ' + str(step.stepNumber),
                             showPlot=False,
                             fileName=gfname)
-                        # Now merge the data pdf file and the graph pdf file
-                        MergePdf(fileNameSrc1=pfname + '.pdf',
-                                fileNameSrc2=gfname,
-                                fileNameDest=pfname + '.pdf',
-                                deleteSrcFiles=False)
+                    # Now merge the data pdf file and the graph pdf file
+                    MergePdf(fileNameSrc1=pfname + '.pdf',
+                            fileNameSrc2=gfname,
+                            fileNameDest=pfname + '.pdf')
+
+            # At this point each step has been processed.
+            # Renmae the pdf to a nicer name
+            try:
+                if exists(pfname + '.pdf'):
+                    rename(pfname + '.pdf', fname + '.pdf')
+            except:
+                print('Unexpected error when renaming the file: ' + pfname + '.pdf')
+
+    # remove the temp files
+    for file in glob('./__zzqq__graph*'):
+        print('Removing temporary file: ' + file)
+        try:
+            remove(file)
+        except:
+            print('Unexpected error when removing the file: ' + file)
 
 
 # get end processing time

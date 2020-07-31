@@ -102,6 +102,9 @@ def MakePdfDfnStepRow(pdf, dfnStep):
         # default
         pdf.set_font(pdf.defaultFontNames[1], '')
 
+    # set draw color so the boarders are grey (lower contrast than black)
+    pdf.set_draw_color(150, 150,150) #rgb values 
+
     pdf.cell(colWidth * 2.4, textHeight, 'Step', border = 1)
     pdf.cell(colWidth * 4.8, textHeight, 'Test Method', border = 1)
     pdf.cell(colWidth * 4.8, textHeight, 'Step Mode', border = 1)
@@ -160,7 +163,7 @@ def MakePdfDfnStepRow(pdf, dfnStep):
         pdf.set_font(pdf.defaultFontNames[1], '')
 
     pdf.cell(colWidth * 2.4, textHeight, 'V Test (V)', border = 1)
-    pdf.cell(colWidth * 2.4, textHeight, 'I Limit (mA)', border = 1)
+    pdf.cell(colWidth * 2.4, textHeight, 'I Limit (uA)', border = 1)
     pdf.cell(colWidth * 2.4, textHeight, 'Test Time (s)', border = 1)
     pdf.cell(colWidth * 2.4, textHeight, 'Ramp Time (s)', border = 1)
     pdf.cell(colWidth * 2.4, textHeight, 'Delay Time (s)', border = 1)
@@ -176,7 +179,7 @@ def MakePdfDfnStepRow(pdf, dfnStep):
         pdf.set_font(pdf.defaultFontNames[0], '')
 
     pdf.cell(colWidth * 2.4, textHeight, str(dfnStep.testVoltage), border = 1)
-    pdf.cell(colWidth * 2.4, textHeight, str(dfnStep.currentLimit), border = 1)
+    pdf.cell(colWidth * 2.4, textHeight, str(dfnStep.currentLimit * 1000.0), border = 1)
     pdf.cell(colWidth * 2.4, textHeight, str(dfnStep.testTime), border = 1)
     pdf.cell(colWidth * 2.4, textHeight, str(dfnStep.rampTime), border = 1)
     pdf.cell(colWidth * 2.4, textHeight, str(dfnStep.delayTime), border = 1)
@@ -205,6 +208,9 @@ def MakePdfDataStepRow(pdf, dataStep):
     else:
         # default
         pdf.set_font(pdf.defaultFontNames[1], '')
+
+    # set draw color so the boarders are grey (lower contrast than black)
+    pdf.set_draw_color(150, 150,150) #rgb values
 
     pdf.cell(colWidth * 3.0, textHeight, 'Step', border = 1)
     pdf.cell(colWidth * 3.0, textHeight, 'Test Method', border = 1)
@@ -263,10 +269,14 @@ def MakePdfDataStepRow(pdf, dataStep):
         # default
         pdf.set_font(pdf.defaultFontNames[1], '')
 
+    # Color the measured current red if it is at or over the limit
     pdf.cell(colWidth * 3.0, textHeight, 'V Nom. (V)', border = 1)
     pdf.cell(colWidth * 3.0, textHeight, 'V End Meas. (V)', border = 1)
-    pdf.cell(colWidth * 3.0, textHeight, 'I Limit (mA)', border = 1)
-    pdf.cell(colWidth * 3.0, textHeight, 'I Max Meas. (mA)', border = 1)
+    pdf.cell(colWidth * 3.0, textHeight, 'I Limit (uA)', border = 1)
+    if dataStep.measuredCurrent >= dataStep.currentLimit:
+        pdf.set_text_color(204, 0, 0) # rgb dark red
+    pdf.cell(colWidth * 3.0, textHeight, 'I Max Meas. (uA)', border = 1)
+    pdf.set_text_color(0, 0, 0) # rgb black
     pdf.ln(textHeight)
 
     # print the 6th row: values (regular weight)
@@ -280,8 +290,11 @@ def MakePdfDataStepRow(pdf, dataStep):
 
     pdf.cell(colWidth * 3.0, textHeight, str(dataStep.nominalVoltage), border = 1)
     pdf.cell(colWidth * 3.0, textHeight, str(dataStep.measuredVoltage), border = 1)
-    pdf.cell(colWidth * 3.0, textHeight, str(dataStep.currentLimit), border = 1)
-    pdf.cell(colWidth * 3.0, textHeight, str(dataStep.measuredCurrent), border = 1)
+    pdf.cell(colWidth * 3.0, textHeight, str(dataStep.currentLimit * 1000.0), border = 1)
+    if dataStep.measuredCurrent >= dataStep.currentLimit:
+        pdf.set_text_color(204, 0, 0) # rgb dark red
+    pdf.cell(colWidth * 3.0, textHeight, str(dataStep.measuredCurrent * 1000.0), border = 1)
+    pdf.set_text_color(0, 0, 0) # rgb black
     pdf.ln(textHeight * 3)
 
 
@@ -361,7 +374,7 @@ def PlotTvsVandI(tData, vData, iData, iThreshold, iMax, title='', showPlot=False
     iAxis.plot(tData, iMx, color=mxColor, linewidth=0.75, label='I Meas. Max')
     # Plot the measured current -- do this after the horizontal line at the max
     # os the current is on top.
-    iAxis.set_ylabel('current (mA)', color=iColor)
+    iAxis.set_ylabel('current (uA)', color=iColor)
     iAxis.plot(tData, iData, color=iColor, linewidth=0.75, label='I Meas.')
     # If the measured current is near the threshold, plot the threshold. Make this
     # conditional, so that when a test is successful and the measured currents are
@@ -405,8 +418,8 @@ def PlotTvsVandI(tData, vData, iData, iThreshold, iMax, title='', showPlot=False
         try:
             # not sure what the possible exceptions are. Take a guess, and raise
             # in the 'generic' case
-            plt.savefig(fileName, orientation='portrait', papertype='letter',
-                       format='pdf', transparent=False, frameon=False,
+            plt.savefig(fileName, orientation='portrait',
+                       format='pdf', transparent=False,
                        bbox_inches='tight', pad_inches=0.25)
         except IOError as ioe:
             print('I/O error when saving the plot:')
@@ -423,8 +436,8 @@ def PlotTvsVandI(tData, vData, iData, iThreshold, iMax, title='', showPlot=False
         plt.close()
 
 # Merge (append) pdf source 2 to the end of pdf source 1, and save the result in the
-# destination file. Delete the source files if option is specified.
-def MergePdf(fileNameSrc1, fileNameSrc2, fileNameDest, deleteSrcFiles=False ):
+# destination file.
+def MergePdf(fileNameSrc1, fileNameSrc2, fileNameDest):
 
     # Now merge the plot pdf onto the end of the cal data pdf
     merger= PdfFileMerger()
@@ -445,16 +458,4 @@ def MergePdf(fileNameSrc1, fileNameSrc2, fileNameDest, deleteSrcFiles=False ):
         print('Unexpcted error merging the data and plot files: ', exc_info()[0])
         raise
 
-    # Delete the source files if specified
-    if deleteSrcFiles:
-        try:
-            # delete the individual files
-            if os.path.exists(fileNameSrc1):
-                os.remove(fileNameSrc1)
-            if os.path.exists(fileNameSrc2):
-                os.remove(fileNameSrc2)
-
-        except:
-            print('Unexpcted error when deleting files in MergePdf(): ', exc_info()[0])
-            raise
 
